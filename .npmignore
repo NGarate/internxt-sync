@@ -1,6 +1,7 @@
 # Source TypeScript files
 *.ts
 !*.d.ts
+!internxt-sync.ts
 
 # Tests
 src/test/

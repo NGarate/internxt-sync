@@ -68,12 +68,8 @@ $RECYCLE.BIN/
 *.njsproj
 *.sln
 *.sw?
+*.swp
+*.swo
 
 # Generated upload state files
-.internxt-upload-state.json
-
-# IDE and editor files
-.idea/
-.vscode/
-*.swp
-*.swo 
+.internxt-upload-state.json 
