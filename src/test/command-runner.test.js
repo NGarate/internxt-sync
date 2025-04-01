@@ -9,6 +9,7 @@ import * as commandRunner from '../utils/command-runner.js';
 import * as childProcess from 'child_process';
 import * as logger from '../utils/logger.js';
 import { spyOn, createMockProcess } from './test-utils.js';
+import { mockPromiseResult, mockPromiseRejection } from './test-helpers.js';
 
 describe('Command Runner', () => {
   let loggerVerboseSpy;

@@ -39,11 +39,18 @@ describe('FileScanner', () => {
   
   // Test constructor
   it('should create a FileScanner with the provided source directory', () => {
+    // Mock path.resolve to return a predictable path
+    const originalResolve = path.resolve;
+    spyOn(path, 'resolve').mockImplementation((dir) => `/resolved${dir}`);
+    
     const scanner = new FileScanner('/test/dir', 1);
     
-    expect(scanner.sourceDir).toContain('/test/dir');
+    expect(scanner.sourceDir).toBe('/resolved/test/dir');
     expect(scanner.verbosity).toBe(1);
     expect(scanner.statePath).toContain('.internxt-upload-state.json');
+    
+    // Restore original path.resolve
+    path.resolve = originalResolve;
   });
   
   // Test loadState

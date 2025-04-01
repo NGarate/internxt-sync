@@ -37,9 +37,9 @@ describe('Help Text Utilities', () => {
       
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
-      // Check for Bun-specific content
-      expect(capturedHelpText).toContain('bun internxt-uploader.ts');
-      expect(capturedHelpText).not.toContain('node internxt-uploader.js');
+      // Check for Bun-specific content - updated to match actual file name
+      expect(capturedHelpText).toContain('bun internxt-sync.ts');
+      expect(capturedHelpText).not.toContain('node internxt-sync.js');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -70,9 +70,9 @@ describe('Help Text Utilities', () => {
       
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
-      // Check for Node-specific content
-      expect(capturedHelpText).toContain('node internxt-uploader.js');
-      expect(capturedHelpText).not.toContain('bun internxt-uploader.ts');
+      // Check for Node-specific content - updated to match actual file name
+      expect(capturedHelpText).toContain('node internxt-sync.js');
+      expect(capturedHelpText).not.toContain('bun internxt-sync.ts');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -96,51 +96,51 @@ describe('Help Text Utilities', () => {
     it('should return help text string for Bun environment', () => {
       isBunEnvironmentSpy.mockImplementation(() => true);
       
-      const result = helpText.getHelpText();
+      const helpTextContent = helpText.getHelpText();
       
-      // Check for Bun-specific content
-      expect(result).toContain('bun internxt-uploader.ts');
-      expect(result).not.toContain('node internxt-uploader.js');
+      // Check for Bun-specific content - updated to match actual file name
+      expect(helpTextContent).toContain('bun internxt-sync.ts');
+      expect(helpTextContent).not.toContain('node internxt-sync.js');
       
       // Check for essential help sections
-      expect(result).toContain('Usage:');
-      expect(result).toContain('Options:');
-      expect(result).toContain('--cores=<number>');
-      expect(result).toContain('default: 2/3 of CPU cores');
-      expect(result).toContain('--target=<path>');
-      expect(result).toContain('--quiet');
-      expect(result).toContain('--verbose');
-      expect(result).toContain('--skip-setup');
-      expect(result).toContain('--webdav-url=<url>');
-      expect(result).toContain('--help');
+      expect(helpTextContent).toContain('Usage:');
+      expect(helpTextContent).toContain('Options:');
+      expect(helpTextContent).toContain('--cores=<number>');
+      expect(helpTextContent).toContain('default: 2/3 of CPU cores');
+      expect(helpTextContent).toContain('--target=<path>');
+      expect(helpTextContent).toContain('--quiet');
+      expect(helpTextContent).toContain('--verbose');
+      expect(helpTextContent).toContain('--skip-setup');
+      expect(helpTextContent).toContain('--webdav-url=<url>');
+      expect(helpTextContent).toContain('--help');
       
       // Check for examples section
-      expect(result).toContain('Examples:');
+      expect(helpTextContent).toContain('Examples:');
     });
     
     it('should return help text string for Node environment', () => {
       isBunEnvironmentSpy.mockImplementation(() => false);
       
-      const result = helpText.getHelpText();
+      const helpTextContent = helpText.getHelpText();
       
-      // Check for Node-specific content
-      expect(result).toContain('node internxt-uploader.js');
-      expect(result).not.toContain('bun internxt-uploader.ts');
+      // Check for Node-specific content - updated to match actual file name
+      expect(helpTextContent).toContain('node internxt-sync.js');
+      expect(helpTextContent).not.toContain('bun internxt-sync.ts');
       
       // Check for essential help sections
-      expect(result).toContain('Usage:');
-      expect(result).toContain('Options:');
-      expect(result).toContain('--cores=<number>');
-      expect(result).toContain('default: 2/3 of CPU cores');
-      expect(result).toContain('--target=<path>');
-      expect(result).toContain('--quiet');
-      expect(result).toContain('--verbose');
-      expect(result).toContain('--skip-setup');
-      expect(result).toContain('--webdav-url=<url>');
-      expect(result).toContain('--help');
+      expect(helpTextContent).toContain('Usage:');
+      expect(helpTextContent).toContain('Options:');
+      expect(helpTextContent).toContain('--cores=<number>');
+      expect(helpTextContent).toContain('default: 2/3 of CPU cores');
+      expect(helpTextContent).toContain('--target=<path>');
+      expect(helpTextContent).toContain('--quiet');
+      expect(helpTextContent).toContain('--verbose');
+      expect(helpTextContent).toContain('--skip-setup');
+      expect(helpTextContent).toContain('--webdav-url=<url>');
+      expect(helpTextContent).toContain('--help');
       
       // Check for examples section
-      expect(result).toContain('Examples:');
+      expect(helpTextContent).toContain('Examples:');
     });
   });
 }); 
