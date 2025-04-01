@@ -1,4 +1,4 @@
-# Source TypeScript files
+# Source TypeScript files (except the main one)
 *.ts
 !*.d.ts
 !internxt-sync.ts
@@ -32,6 +32,8 @@ wiki/
 
 # Development scripts and tools
 scripts/
+!scripts/cross-platform-build.js
+!scripts/cross-platform-clean.js
 .vscode/
 .idea/
 

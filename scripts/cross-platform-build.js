@@ -2,22 +2,22 @@
 
 /**
  * Cross-platform build script for Internxt Sync
- * This script handles building the project on any operating system.
+ * 
+ * This script builds the TypeScript source into JavaScript that can run in Node.js.
+ * It tries to use Bun first for faster builds, then falls back to other methods if needed.
  */
 
-import fs from 'fs';
-import path from 'path';
 import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import path from 'path';
+import fs from 'fs';
 
 // Get the directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const rootDir = path.join(__dirname, '..');
-const srcDir = path.join(rootDir, 'src');
-const isWindows = process.platform === 'win32';
+const rootDir = path.resolve(__dirname, '..');
 
-// ANSI color codes for terminal output
+// ANSI color codes for better terminal output
 const colors = {
   blue: '\x1b[34m',
   green: '\x1b[32m',
@@ -26,63 +26,66 @@ const colors = {
   reset: '\x1b[0m'
 };
 
-console.log(`${colors.blue}Building Internxt Sync...${colors.reset}`);
-
-// Create src directory if it doesn't exist
-if (!fs.existsSync(srcDir)) {
-  console.log(`${colors.yellow}Creating src directory...${colors.reset}`);
-  fs.mkdirSync(srcDir, { recursive: true });
-}
-
-// Check if Bun is installed
-let bunInstalled = false;
-
-try {
-  // Use a command that works on all platforms
-  const command = isWindows ? 'where bun' : 'which bun';
-  execSync(command, { stdio: 'ignore' });
-  bunInstalled = true;
-} catch (error) {
-  // Try an alternative check for Windows
-  if (isWindows) {
-    try {
-      execSync('bun --version', { stdio: 'ignore' });
-      bunInstalled = true;
-    } catch (e) {
-      bunInstalled = false;
-    }
-  } else {
-    bunInstalled = false;
+// Check if Bun is available
+function isBunAvailable() {
+  try {
+    execSync('bun --version', { stdio: 'ignore' });
+    return true;
+  } catch (error) {
+    return false;
   }
 }
 
-if (bunInstalled) {
-  console.log(`${colors.green}Bun detected. Building with Bun...${colors.reset}`);
+// Check if we're running in Bun
+const isBunRuntime = typeof process !== 'undefined' && 
+                     typeof process.versions !== 'undefined' && 
+                     typeof process.versions.bun !== 'undefined';
+
+// Main build function
+function build() {
+  const srcDir = path.join(rootDir, 'src');
+  const tsFile = path.join(rootDir, 'internxt-sync.ts');
+  
+  // Create src directory if it doesn't exist
+  if (!fs.existsSync(srcDir)) {
+    fs.mkdirSync(srcDir, { recursive: true });
+  }
+  
+  // Check if TypeScript file exists
+  if (!fs.existsSync(tsFile)) {
+    console.error(`${colors.red}Error: TypeScript file not found at ${tsFile}${colors.reset}`);
+    process.exit(1);
+  }
+  
+  console.log(`${colors.blue}Building Internxt Sync...${colors.reset}`);
+  
   try {
-    // Create a cross-platform build command
-    const sourceFile = path.join(rootDir, 'internxt-sync.ts');
-    const buildCmd = `bun build "${sourceFile}" --outdir "${srcDir}" --target node --external chalk --minify`;
+    // Try to build with Bun first (fastest)
+    if (isBunAvailable()) {
+      console.log(`${colors.blue}Using Bun to build...${colors.reset}`);
+      
+      execSync(`bun build "${tsFile}" --outdir "${srcDir}" --target node --external chalk`, {
+        stdio: 'inherit',
+        cwd: rootDir
+      });
+      
+      console.log(`${colors.green}Build completed successfully!${colors.reset}`);
+      return;
+    }
     
-    execSync(buildCmd, {
-      stdio: 'inherit',
-      cwd: rootDir
-    });
+    // If Bun is not available, show instructions
+    console.log(`${colors.yellow}Bun is not available. For faster builds, consider installing Bun:${colors.reset}`);
+    console.log(`${colors.yellow}https://bun.sh/docs/installation${colors.reset}`);
     
-    console.log(`${colors.green}Build completed successfully!${colors.reset}`);
+    // TODO: Add fallback build method if needed (e.g., using tsc or esbuild)
+    console.error(`${colors.red}No suitable build tool found. Please install Bun.${colors.reset}`);
+    process.exit(1);
+    
   } catch (error) {
     console.error(`${colors.red}Build failed: ${error.message}${colors.reset}`);
     process.exit(1);
   }
-} else {
-  console.log(`${colors.yellow}Bun not found. Please install Bun for best performance:${colors.reset}`);
-  console.log(`${colors.yellow}Visit https://bun.sh/ for installation instructions.${colors.reset}`);
-  
-  // Check if we have a compiled JavaScript file already
-  const jsFile = path.join(srcDir, 'internxt-sync.js');
-  if (fs.existsSync(jsFile)) {
-    console.log(`${colors.green}Using existing compiled JavaScript file.${colors.reset}`);
-  } else {
-    console.error(`${colors.red}Bun is required for initial compilation. Please install Bun and try again.${colors.reset}`);
-    process.exit(1);
-  }
-} 
+}
+
+// Run the build
+build(); 

@@ -1,28 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * Internxt Sync - Universal Entry Point
+ * Universal Entry Point for Internxt Sync
  * 
- * This file automatically detects the runtime environment (Bun or Node.js)
- * and runs the appropriate version of the uploader script.
+ * This file automatically detects the runtime environment and runs the appropriate version:
+ * - In Bun: Directly runs the TypeScript file for maximum performance
+ * - In Node.js: Runs the pre-compiled JavaScript version
+ * 
+ * The detection and execution are transparent to the end user.
  */
 
-// Detect if running in Bun environment
-const isBun = typeof process !== 'undefined' && 
-              typeof process.versions !== 'undefined' && 
-              typeof process.versions.bun !== 'undefined';
-
-// Import required modules using ES module syntax
-import fs from 'fs';
-import path from 'path';
-import { execSync, spawn } from 'child_process';
 import { fileURLToPath } from 'url';
+import path from 'path';
+import fs from 'fs';
+import { execSync, spawn } from 'child_process';
 
 // Get the directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Use ANSI colors for terminal output
+// ANSI color codes for better terminal output
 const colors = {
   blue: '\x1b[34m',
   green: '\x1b[32m',
@@ -31,187 +28,127 @@ const colors = {
   reset: '\x1b[0m'
 };
 
-// Detect platform
-const isWindows = process.platform === 'win32';
-const isMac = process.platform === 'darwin';
-const isLinux = process.platform === 'linux';
-const platformName = isWindows ? 'Windows' : (isMac ? 'macOS' : (isLinux ? 'Linux' : 'Unknown'));
+// Check if we're running in Bun
+const isBunRuntime = typeof process !== 'undefined' && 
+                     typeof process.versions !== 'undefined' && 
+                     typeof process.versions.bun !== 'undefined';
 
-console.log(`${colors.blue}Internxt Sync - Universal Entry Point${colors.reset}`);
-console.log(`${colors.blue}Detected runtime: ${isBun ? 'Bun' : 'Node.js'} on ${platformName}${colors.reset}`);
-
-// Define file paths
-const srcDir = path.join(__dirname, 'src');
-const tsMainFile = path.join(__dirname, 'internxt-sync.ts');
-const jsMainFile = path.join(srcDir, 'internxt-sync.js');
-
-// Check if the required files/directories exist
-const tsExists = fs.existsSync(tsMainFile);
-const jsExists = fs.existsSync(jsMainFile);
-const srcDirExists = fs.existsSync(srcDir);
-
-if (!srcDirExists && !tsExists) {
-  console.error(`${colors.red}Error: Neither source directory (${srcDir}) nor original TypeScript file (${tsMainFile}) found.${colors.reset}`);
-  console.error(`${colors.red}Please make sure the project is properly installed.${colors.reset}`);
-  process.exit(1);
+// Check if Bun is installed (even if we're not running in it)
+function isBunAvailable() {
+  try {
+    execSync('bun --version', { stdio: 'ignore' });
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
-// Make sure the scripts directory exists
-const scriptsDir = path.join(__dirname, 'scripts');
-if (!fs.existsSync(scriptsDir)) {
-  fs.mkdirSync(scriptsDir, { recursive: true });
-}
-
-if (isBun) {
-  // If Bun is available, prefer running the TypeScript file directly if it exists
-  if (tsExists) {
-    console.log(`${colors.blue}Running TypeScript file directly with Bun...${colors.reset}`);
+// Main function to run the appropriate version
+async function main() {
+  const args = process.argv.slice(2);
+  const tsFile = path.join(__dirname, 'internxt-sync.ts');
+  const jsFile = path.join(__dirname, 'src', 'internxt-sync.js');
+  
+  try {
+    // CASE 1: Running in Bun - use TypeScript directly
+    if (isBunRuntime) {
+      if (fs.existsSync(tsFile)) {
+        try {
+          const module = await import('./internxt-sync.ts');
+          if (typeof module.default === 'function') {
+            return module.default();
+          } else {
+            throw new Error('TypeScript module does not export a default function');
+          }
+        } catch (error) {
+          console.error(`${colors.red}Error running TypeScript directly: ${error.message}${colors.reset}`);
+          // Fall back to JS if TS fails
+          if (fs.existsSync(jsFile)) {
+            console.log(`${colors.yellow}Falling back to JavaScript version...${colors.reset}`);
+            return runJavaScriptVersion();
+          }
+          throw error;
+        }
+      }
+    }
     
-    try {
-      // Use a direct path import with Bun for cross-platform compatibility
-      const args = process.argv.slice(2);
+    // CASE 2: Not in Bun runtime but Bun is available - spawn Bun process
+    if (!isBunRuntime && isBunAvailable() && fs.existsSync(tsFile)) {
+      console.log(`${colors.blue}Bun detected, using it to run TypeScript directly...${colors.reset}`);
       
-      if (isWindows) {
-        console.log(`${colors.blue}Using Windows-compatible execution for Bun...${colors.reset}`);
-        
-        // Import the TypeScript file directly on Windows
-        import(tsMainFile)
-          .then((module) => {
-            module.default();
-          })
-          .catch((error) => {
-            console.error(`${colors.red}Error importing TypeScript directly: ${error.message}${colors.reset}`);
-            if (jsExists) {
-              console.log(`${colors.yellow}Falling back to JavaScript version...${colors.reset}`);
-              runJavaScriptVersion();
-            } else {
-              process.exit(1);
-            }
-          });
-      } else {
-        // For non-Windows platforms, use spawn as before
-        const bunProcess = spawn('bun', [tsMainFile, ...args], {
+      return new Promise((resolve, reject) => {
+        const bunProcess = spawn('bun', [tsFile, ...args], {
           stdio: 'inherit',
           cwd: __dirname
         });
         
         bunProcess.on('close', (code) => {
-          process.exit(code);
+          if (code === 0) {
+            resolve();
+          } else {
+            // If Bun execution fails, try JavaScript version
+            if (fs.existsSync(jsFile)) {
+              console.log(`${colors.yellow}Bun execution failed, falling back to JavaScript...${colors.reset}`);
+              runJavaScriptVersion().then(resolve).catch(reject);
+            } else {
+              reject(new Error(`Process exited with code ${code}`));
+            }
+          }
         });
-      }
-    } catch (error) {
-      console.error(`${colors.red}Error running TypeScript with Bun: ${error.message}${colors.reset}`);
-      // Try to fall back to the JS version
-      if (jsExists) {
-        console.log(`${colors.yellow}Falling back to JavaScript version...${colors.reset}`);
-        runJavaScriptVersion();
-      } else {
-        process.exit(1);
-      }
+      });
     }
-  } else if (jsExists) {
-    // If no TypeScript file but JavaScript exists, run that
-    console.log(`${colors.blue}Running JavaScript version with Bun...${colors.reset}`);
-    runJavaScriptVersion();
-  } else {
-    console.error(`${colors.red}Error: No suitable entry point found.${colors.reset}`);
+    
+    // CASE 3: Default - run JavaScript version
+    return runJavaScriptVersion();
+    
+  } catch (error) {
+    console.error(`${colors.red}Error running application: ${error.message}${colors.reset}`);
     process.exit(1);
   }
-} else {
-  // Using Node.js - always run the JavaScript version
-  if (!jsExists) {
-    console.log(`${colors.yellow}JavaScript module not found. Checking if it needs to be compiled...${colors.reset}`);
-    
-    if (tsExists) {
-      try {
-        // Check if Bun is installed for compilation
-        let bunInstalled = false;
-        
-        try {
-          // Use a command that works on all platforms
-          const bunCheckCmd = isWindows ? 'where bun' : 'which bun';
-          execSync(bunCheckCmd, { stdio: 'ignore' });
-          bunInstalled = true;
-        } catch (bunNotFoundError) {
-          // Try an alternative check for Windows
-          if (isWindows) {
-            try {
-              execSync('bun --version', { stdio: 'ignore' });
-              bunInstalled = true;
-            } catch (e) {
-              bunInstalled = false;
-            }
-          } else {
-            bunInstalled = false;
-          }
-        }
-        
-        if (bunInstalled) {
-          console.log(`${colors.blue}Compiling source files using Bun...${colors.reset}`);
-          
-          // Create source directory if it doesn't exist
-          if (!srcDirExists) {
-            fs.mkdirSync(srcDir, { recursive: true });
-          }
-          
-          // Compile the TypeScript to JavaScript
-          execSync(`bun build "${tsMainFile}" --outdir "${srcDir}" --target node --external chalk --minify`, {
-            stdio: 'inherit',
-            cwd: __dirname
-          });
-          
-          if (fs.existsSync(jsMainFile)) {
-            console.log(`${colors.green}Compilation successful!${colors.reset}`);
-          } else {
-            throw new Error('Compilation did not produce the expected output file');
-          }
-        } else {
-          console.error(`${colors.red}Error: Bun is not installed and JavaScript version is missing.${colors.reset}`);
-          console.error(`${colors.red}Please install Bun:${colors.reset}`);
-          
-          if (isWindows) {
-            console.error(`${colors.yellow}For Windows, visit: https://bun.sh/docs/installation${colors.reset}`);
-            console.error(`${colors.yellow}or use PowerShell: powershell -c "irm bun.sh/install.ps1|iex"${colors.reset}`);
-          } else if (isMac || isLinux) {
-            console.error(`${colors.yellow}For macOS/Linux: curl -fsSL https://bun.sh/install | bash${colors.reset}`);
-          } else {
-            console.error(`${colors.yellow}Visit https://bun.sh/docs/installation for instructions.${colors.reset}`);
-          }
-          
-          console.error(`${colors.yellow}After installing Bun, run: bun build internxt-sync.ts --outdir src --target node --external chalk --minify${colors.reset}`);
-          process.exit(1);
-        }
-      } catch (compileError) {
-        console.error(`${colors.red}Failed to compile: ${compileError.message}${colors.reset}`);
-        process.exit(1);
-      }
-    } else {
-      console.error(`${colors.red}Error: No source files found to run or compile.${colors.reset}`);
-      process.exit(1);
-    }
-  }
-  
-  runJavaScriptVersion();
 }
 
-/**
- * Run the JavaScript version of the uploader
- */
-function runJavaScriptVersion() {
-  try {
-    // Import the main module dynamically
-    import('./src/internxt-sync.js')
-      .then(module => {
-        // Run the main function
-        module.default();
-      })
-      .catch(error => {
-        console.error(`${colors.red}Error importing JavaScript module: ${error.message}${colors.reset}`);
-        console.error(error);
-        process.exit(1);
-      });
-  } catch (error) {
-    console.error(`${colors.red}Error running JavaScript version: ${error.message}${colors.reset}`);
-    process.exit(1);
+// Helper function to run the JavaScript version
+async function runJavaScriptVersion() {
+  const jsFile = path.join(__dirname, 'src', 'internxt-sync.js');
+  
+  if (fs.existsSync(jsFile)) {
+    try {
+      const module = await import('./src/internxt-sync.js');
+      if (typeof module.default === 'function') {
+        return module.default();
+      } else {
+        throw new Error('JavaScript module does not export a default function');
+      }
+    } catch (error) {
+      console.error(`${colors.red}Error importing JavaScript module: ${error.message}${colors.reset}`);
+      throw error;
+    }
+  } else {
+    // If JS file doesn't exist, try to build it if we have Bun
+    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'internxt-sync.ts'))) {
+      console.log(`${colors.yellow}JavaScript version not found, attempting to build it...${colors.reset}`);
+      
+      try {
+        execSync('bun build internxt-sync.ts --outdir src --target node --external chalk', {
+          stdio: 'inherit',
+          cwd: __dirname
+        });
+        
+        if (fs.existsSync(jsFile)) {
+          console.log(`${colors.green}Build successful, running JavaScript version...${colors.reset}`);
+          return runJavaScriptVersion();
+        }
+      } catch (buildError) {
+        console.error(`${colors.red}Failed to build JavaScript version: ${buildError.message}${colors.reset}`);
+      }
+    }
+    
+    throw new Error('Could not find or build a runnable version of the application');
   }
-} 
+}
+
+// Run the application
+main().catch(error => {
+  console.error(`${colors.red}Fatal error: ${error.message}${colors.reset}`);
+  process.exit(1);
+}); 

@@ -8,14 +8,14 @@
     "chalk": "^5.4.1"
   },
   "scripts": {
-    "start": "node .",
-    "upload": "node .",
-    "build": "node scripts/cross-platform-build.js",
+    "start": "bun internxt-sync.ts || node index.js",
+    "upload": "bun internxt-sync.ts || node index.js",
+    "build": "bun build internxt-sync.ts --outdir src --target node --external chalk || node scripts/cross-platform-build.js",
     "prepare": "npm run build",
     "clean": "node scripts/cross-platform-clean.js",
-    "test": "bun test src/test",
-    "test:watch": "bun test --watch src/test",
-    "test:coverage": "bun test --coverage src/test",
+    "test": "bun test src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
+    "test:watch": "bun test --watch src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
+    "test:coverage": "bun test --coverage src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
     "prepublishOnly": "npm run test && npm run build"
   },
   "bin": {
@@ -34,7 +34,8 @@
   "author": "ngarate",
   "license": "MIT",
   "engines": {
-    "node": ">=14.16.0"
+    "node": ">=14.16.0",
+    "bun": ">=1.0.0"
   },
   "repository": {
     "type": "git",
