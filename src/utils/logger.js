@@ -12,15 +12,47 @@ export const Verbosity = {
   Verbose: 2 // All messages including per-file operations
 };
 
+// Maintain a log of recent messages to prevent duplicates
+const recentMessages = new Set();
+const MAX_RECENT_MESSAGES = 10;
+const DUPLICATE_TIMEOUT = 1000; // 1 second
+
+/**
+ * Clear old messages from the recent messages set
+ */
+function clearOldMessages() {
+  if (recentMessages.size > MAX_RECENT_MESSAGES) {
+    // Clear all messages if we exceed the limit
+    recentMessages.clear();
+  }
+  
+  // Clear all messages after a timeout
+  setTimeout(() => {
+    recentMessages.clear();
+  }, DUPLICATE_TIMEOUT);
+}
+
 /**
  * Log a message with the specified verbosity level
  * @param {string} message - The message to log
  * @param {number} level - The verbosity level of the message
  * @param {number} currentVerbosity - The current verbosity setting
+ * @param {boolean} allowDuplicates - Whether to allow duplicate messages
  */
-export function log(message, level, currentVerbosity) {
+export function log(message, level, currentVerbosity, allowDuplicates = true) {
   if (currentVerbosity >= level) {
+    // Check if this is a duplicate message
+    if (!allowDuplicates && recentMessages.has(message)) {
+      return;
+    }
+    
     console.log(message);
+    
+    // Add to recent messages if not allowing duplicates
+    if (!allowDuplicates) {
+      recentMessages.add(message);
+      clearOldMessages();
+    }
   }
 }
 
@@ -38,7 +70,7 @@ export function error(message) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function warning(message, currentVerbosity) {
-  log(chalk.yellow(message), Verbosity.Normal, currentVerbosity);
+  log(chalk.yellow(message), Verbosity.Normal, currentVerbosity, false);
 }
 
 /**
@@ -47,7 +79,7 @@ export function warning(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function info(message, currentVerbosity) {
-  log(chalk.blue(message), Verbosity.Normal, currentVerbosity);
+  log(chalk.blue(message), Verbosity.Normal, currentVerbosity, false);
 }
 
 /**
@@ -56,7 +88,7 @@ export function info(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function success(message, currentVerbosity) {
-  log(chalk.green(message), Verbosity.Normal, currentVerbosity);
+  log(chalk.green(message), Verbosity.Normal, currentVerbosity, true);
 }
 
 /**
@@ -65,7 +97,9 @@ export function success(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function verbose(message, currentVerbosity) {
-  log(message, Verbosity.Verbose, currentVerbosity);
+  // For verbose messages, we always allow duplicates as they might contain
+  // different dynamic content but similar static content
+  log(message, Verbosity.Verbose, currentVerbosity, true);
 }
 
 /**

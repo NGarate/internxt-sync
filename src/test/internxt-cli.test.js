@@ -121,17 +121,28 @@ describe('Internxt CLI Manager', () => {
   
   // Test getWebDAVUrl
   describe('getWebDAVUrl', () => {
-    it('should return the WebDAV URL from config', () => {
+    it('should return the WebDAV URL from config', async () => {
       const cli = new InternxtCLI();
       cli.config.webdavUrl = 'http://webdav.example.com';
-      
-      expect(cli.getWebDAVUrl()).toBe('http://webdav.example.com');
+      cli.config.webdavEnabled = true;
+
+      // Mock checkWebDAVEnabled to return true
+      checkWebDAVEnabledCommandSpy.mockImplementation(() => Promise.resolve(true));
+
+      const url = await cli.getWebDAVUrl();
+      expect(url).toBe('http://webdav.example.com');
     });
-    
-    it('should return null if WebDAV URL is not set', () => {
+
+    it('should return null if WebDAV URL is not set', async () => {
       const cli = new InternxtCLI();
-      
-      expect(cli.getWebDAVUrl()).toBeNull();
+      cli.config.webdavUrl = null;
+      cli.config.webdavEnabled = false;
+
+      // Mock checkWebDAVEnabled to return false
+      checkWebDAVEnabledCommandSpy.mockImplementation(() => Promise.resolve(false));
+
+      const url = await cli.getWebDAVUrl();
+      expect(url).toBeNull();
     });
   });
   

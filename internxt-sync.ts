@@ -57,7 +57,7 @@ async function main() {
         logger.error("Setup failed. Cannot continue.");
         process.exit(1);
       }
-      webdavUrl = webdavUrl || internxtCLI.getWebDAVUrl();
+      webdavUrl = webdavUrl || await internxtCLI.getWebDAVUrl();
     } else {
       // Skip-setup mode
       if (webdavUrl) {
@@ -67,15 +67,14 @@ async function main() {
       } else {
         // Try to get WebDAV URL from Internxt CLI without full setup
         logger.info("Checking for WebDAV URL...", options.verbosity);
+        webdavUrl = await internxtCLI.getWebDAVUrl(true);
         
-        // Only check if WebDAV is enabled without doing the full setup
-        if (await internxtCLI.checkWebDAVEnabled()) {
-          webdavUrl = internxtCLI.getWebDAVUrl();
-          logger.info(`Using detected WebDAV URL: ${webdavUrl}`, options.verbosity);
-        } else {
+        if (!webdavUrl) {
           logger.error("Could not detect WebDAV URL. Please enable WebDAV or provide --webdav-url");
           process.exit(1);
         }
+        
+        logger.info(`Using detected WebDAV URL: ${webdavUrl}`, options.verbosity);
       }
     }
     
