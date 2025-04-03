@@ -1,0 +1,88 @@
+# Bun Configuration for Internxt Sync
+
+# Dev dependencies
+dev = ["typescript", "@types/node"]
+
+# Set default logger level
+logLevel = "info"
+
+# Specify Node.js compatibility
+[target]
+node = "18"
+
+# Build configuration
+[build]
+format = "esm"
+minify = false
+sourcemap = "external"
+
+# Typescript configuration
+[typescript]
+# Use tsconfig.json
+enabled = true
+
+# Test configuration
+[test]
+# Configure preload scripts for tests
+preload = ["./src/test/test-helpers/setup.ts"]
+
+# Set test environment variables
+env = { NODE_ENV = "test" }
+
+# Configure the test runner
+timeout = 10000 # 10 seconds timeout for tests
+
+# Configure Bun's native module mocking for tests
+[test.mocks]
+"chalk" = "./src/test/mocks/chalk-mock.ts"
+"webdav" = "./src/test/mocks/webdav-mock.ts"
+
+# Module mapping for tests
+[test.moduleMapper]
+"^../core/(.*)$" = "./src/core/$1"
+"^../utils/(.*)$" = "./src/utils/$1"
+"^../interfaces/(.*)$" = "./src/interfaces/$1"
+
+# Path resolver for tests
+[test.resolver]
+"../core/file-scanner.js" = "./src/core/file-scanner.ts"
+"../core/upload/file-upload-manager.js" = "./src/core/upload/file-upload-manager.ts"
+"../core/upload/progress-tracker.js" = "./src/core/upload/progress-tracker.ts"
+"../core/upload/uploader.js" = "./src/core/upload/uploader.ts"
+"../core/internxt-cli.js" = "./src/core/internxt-cli.ts"
+
+# Bun configuration file
+
+# Specify which style of lockfile to use
+# Using text lockfile instead of binary for better version control compatibility
+lockfile = "text"
+
+# Define scopes and registries
+[[scopes]]
+name = "internxt-sync"
+registry = "https://registry.npmjs.org/"
+
+# Trust settings for script execution
+trust = [
+  "bun-types",
+  "typescript",
+  "chalk",
+  "webdav"
+]
+
+# Install configuration
+[install]
+# Keep peer dependencies when updating packages
+peer = true
+# Don't hoist dependencies
+flat = false
+
+# Run configuration
+[run]
+# Automatically watch for changes when running scripts
+watch = false
+
+# Set up module configuration
+[test]
+# Determine whether to use Jest compatibility mode
+jest = false 

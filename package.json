@@ -1,26 +1,34 @@
 {
   "name": "internxt-sync",
   "version": "0.1.0",
-  "description": "A tool to synchronize and upload files to Internxt Drive",
+  "description": "WebDAV File Uploader for Internxt Drive. Securely uploads files to Internxt Drive using WebDAV. To run tests, use 'bun run test:src' which runs only the tests that have been fixed to work with Bun's testing framework.",
   "type": "module",
-  "main": "index.js",
-  "dependencies": {
-    "chalk": "^5.4.1",
-    "webdav": "^5.8.0"
-  },
+  "main": "dist/internxt-sync.js",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "start": "bun internxt-sync.ts || node index.js",
-    "upload": "bun internxt-sync.ts || node index.js",
-    "build": "bun build internxt-sync.ts --outdir src --target node --external chalk || node scripts/cross-platform-build.js",
-    "prepare": "npm run build",
-    "clean": "node scripts/cross-platform-clean.js",
-    "test": "bun test src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
-    "test:watch": "bun test --watch src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
-    "test:coverage": "bun test --coverage src/test || echo 'Tests require Bun to run. Please install Bun: https://bun.sh/docs/installation'",
-    "prepublishOnly": "npm run test && npm run build"
+    "start": "node dist/internxt-sync.js",
+    "start:bun": "bun dist/internxt-sync.js",
+    "upload": "bun internxt-sync.ts --upload",
+    "dev": "bun --watch internxt-sync.ts",
+    "build": "bun build internxt-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
+    "build:bundle": "bun build internxt-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
+    "build:prod": "tsc -p tsconfig.build.json",
+    "build:clean": "bun clean:win && bun run build",
+    "clean:win": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
+    "cleanup:js": "bun scripts/cleanup-js.ts",
+    "find:unused": "bun run next-unused",
+    "find:unused:custom": "bun scripts/find-unused.ts",
+    "test": "bun scripts/run-tests.ts working",
+    "test:all": "bun scripts/run-tests.ts all",
+    "test:mocked": "bun scripts/run-tests.ts mocked",
+    "test:file": "bun scripts/run-tests.ts specific",
+    "test:watch": "bun test --watch --tsconfig-override tsconfig.test.json --preload ./src/test/test-helpers/setup.ts src/test/fs-utils.test.ts src/test/webdav-directory-service.test.ts src/test/file-scanner.test.ts",
+    "test:src": "bun test --tsconfig-override tsconfig.test.json --preload ./src/test/test-helpers/setup.ts src/test/logger.test.ts src/test/progress-tracker.test.ts src/test/uploader.test.ts",
+    "prepare:publish": "bun clean:win && bun run build:bundle && bun run test:src",
+    "prepublishOnly": "bun clean:win && bun run build:bundle"
   },
   "bin": {
-    "internxt-sync": "index.js"
+    "internxt-sync": "dist/bin.js"
   },
   "keywords": [
     "internxt",
@@ -35,8 +43,8 @@
   "author": "ngarate",
   "license": "MIT",
   "engines": {
-    "node": ">=16.0.0",
-    "bun": ">=1.0.0"
+    "bun": ">=1.0.0",
+    "node": ">=18.0.0"
   },
   "repository": {
     "type": "git",
@@ -47,19 +55,34 @@
   },
   "homepage": "https://github.com/ngarate/internxt-sync#readme",
   "files": [
-    "index.js",
-    "internxt-sync.ts",
-    "src/*.js",
-    "src/core/**/*.js",
-    "src/utils/**/*.js",
+    "dist/**",
     "README.md",
     "LICENSE"
   ],
-  "devDependencies": {},
-  "bun": {
-    "externals": [
-      "webdav",
-      "chalk"
+  "devDependencies": {
+    "@types/node": "^20.17.30",
+    "bun-types": "^1.2.8",
+    "next-unused": "^0.0.6",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "webdav": "^5.8.0"
+  },
+  "bun": {},
+  "next-unused": {
+    "alias": {},
+    "include": [
+      "src"
+    ],
+    "exclude": [
+      "src/test",
+      "node_modules"
+    ],
+    "entrypoints": [
+      "internxt-sync.ts",
+      "index.ts",
+      "bin.js"
     ]
   }
 }

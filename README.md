@@ -152,3 +152,77 @@ Internxt Sync is designed with a Bun-first approach for maximum performance:
 ## License
 
 MIT 
+
+# Internxt WebDAV Uploader
+
+A command-line tool to synchronize and upload files to Internxt Drive using WebDAV protocol.
+
+## Using with Bun
+
+This project is designed to work with Bun, a fast JavaScript runtime and toolkit. Bun offers several advantages:
+
+- Direct TypeScript execution without transpilation
+- Faster dependency installation
+- Bundled test runner
+- Simplified build process
+
+### Requirements
+
+- [Bun](https://bun.sh/) version 1.0.0 or higher
+
+### Installation
+
+```bash
+# Install Bun (if not already installed)
+curl -fsSL https://bun.sh/install | bash
+
+# Install dependencies
+bun install
+```
+
+### Development Commands
+
+```bash
+# Run in development mode
+bun run dev
+
+# Build for production
+bun run build
+
+# Run tests
+bun run test
+
+# Clean up build artifacts
+bun scripts/clean.ts
+
+# Remove JavaScript files (after TypeScript migration)
+bun scripts/cleanup-js.ts
+```
+
+## Features
+
+- Automatic WebDAV URL detection
+- File change detection using checksums
+- Concurrent uploads
+- Progress tracking
+- Clear console output with emoji indicators
+
+## Usage
+
+```bash
+bun internxt-sync.ts <sourceDir> [options]
+```
+
+### Options
+
+- `--webdav-url <url>`: Specify WebDAV server URL
+- `--target-dir <path>`: Specify target directory on WebDAV server
+- `--cores <number>`: Number of concurrent uploads
+- `--verbose`: Show detailed logging
+- `--quiet`: Show minimal output
+- `--skip-setup`: Skip WebDAV connectivity check
+- `--help`: Show help message
+
+## License
+
+MIT 

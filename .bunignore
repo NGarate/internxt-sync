@@ -1,0 +1,29 @@
+# Test files
+/test/
+/src/test/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
+
+# Development files
+.git/
+.github/
+.vscode/
+
+# Build process
+dist/
+scripts/
+
+# Logs
+logs/
+*.log
+
+# Miscellaneous
+.DS_Store
+Thumbs.db
+.cache/
+.idea/
+coverage/
+.nyc_output/
+.internxt-upload-state.json 

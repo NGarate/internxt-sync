@@ -1,50 +1,56 @@
-# Source TypeScript files (except the main one)
+# Source files
+/src/**/*.ts
 *.ts
 !*.d.ts
-!internxt-sync.ts
 
-# Tests
-src/test/
-test/
-__tests__/
-*.test.js
-*.spec.js
+# Test files
+/test/
+/src/test/
+**/*.test.ts
+**/*.test.js
+**/*.spec.ts
+**/*.spec.js
 
-# Development configuration
-.bun
-.gitignore
+# Development files
+.git/
 .github/
+.vscode/
 .editorconfig
-.eslintrc.js
-.eslintrc.json
-.eslintignore
+.eslintrc
 .prettierrc
-.prettierignore
+.gitattributes
 tsconfig.json
-bun.lockb
-
-# Documentation not needed in package
-docs/
-wiki/
+tsconfig.test.json
+tsconfig.build.json
 *.md
 !README.md
-!LICENSE.md
 
-# Development scripts and tools
-scripts/
-!scripts/cross-platform-build.js
-!scripts/cross-platform-clean.js
-.vscode/
-.idea/
+# Build process
+/scripts/
+/.github/
+/.husky/
+/docs/
 
-# CI/CD
-.travis.yml
-.gitlab-ci.yml
-.github/
-.circleci/
+# Environment variables
+.env
+.env.*
 
-# Misc
+# Logs
+logs
+*.log
+
+# Miscellaneous
 .DS_Store
 Thumbs.db
-*.log
-npm-debug.log* 
+.cache/
+.idea/
+coverage/
+.nyc_output/
+.internxt-upload-state.json
+
+# Bun specific files to exclude from publish
+bun.lockb
+bun.lock
+
+# Development dependencies and source
+node_modules/ 
