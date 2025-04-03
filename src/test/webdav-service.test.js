@@ -5,7 +5,7 @@
  */
 
 import { expect, describe, it } from 'bun:test';
-import WebDAVService from '../core/webdav-service.js';
+import WebDAVService from '../core/webdav/webdav-service.js';
 
 // Mock implementation of logger to avoid side effects
 const mockLogger = {

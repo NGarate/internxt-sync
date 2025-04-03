@@ -14,7 +14,7 @@ import { parseArguments } from './src/utils/input-utils.js';
 import { showHelp } from './src/utils/help-text.js';
 import InternxtCLI from './src/core/internxt-cli.js';
 import FileScanner from './src/core/file-scanner.js';
-import Uploader from './src/core/uploader.js';
+import Uploader from './src/core/upload/uploader.js';
 
 // Get the directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);

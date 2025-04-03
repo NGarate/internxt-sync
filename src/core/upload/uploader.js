@@ -6,7 +6,7 @@
 import path from 'path';
 import os from 'os';
 import * as logger from '../../utils/logger.js';
-import WebDAVService from '../webdav-service.js';
+import WebDAVService from '../webdav/webdav-service.js';
 import { HashCache } from './hash-cache.js';
 import { ProgressTracker } from './progress-tracker.js';
 import { FileUploadManager } from './file-upload-manager.js';

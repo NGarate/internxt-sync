@@ -1,91 +1,198 @@
 /**
- * Tests for WebDAV Connectivity Service
+ * Test for WebDAV Connectivity Service
  */
 
-import { expect, describe, it, beforeEach } from 'bun:test';
-
-// Create stub implementation for the WebDAV Client
-class WebDAVClientStub {
-  constructor(options = {}) {
-    this.exists = async (path) => {
-      // Return what was configured for this test
-      if (options.existsResult !== undefined) {
-        return options.existsResult;
-      }
-      
-      // Default behavior - simulate connection
-      if (path === '/') {
-        return true;
-      }
-      
-      return false;
-    };
-    
-    // Keep track of calls for verification
-    this.calls = [];
-  }
-}
-
-// Create stub connectivity service for testing
-class ConnectivityServiceStub {
-  constructor(client, verbosity = 2) {
-    this.client = client;
-    this.verbosity = verbosity;
-  }
-  
-  /**
-   * Check connectivity to the WebDAV server
-   * @returns {Promise<boolean>} True if the server is reachable, false otherwise
-   */
-  async checkConnectivity() {
-    try {
-      const result = await this.client.exists('/');
-      return result === true;
-    } catch (error) {
-      console.error(`Error checking WebDAV connectivity: ${error.message}`);
-      return false;
-    }
-  }
-}
+import { expect, describe, it, beforeEach, afterEach, spyOn } from 'bun:test';
+import { WebDAVConnectivityService } from '../core/webdav/webdav-connectivity-service.js';
+import * as logger from '../utils/logger.js';
 
 describe('WebDAV Connectivity Service', () => {
   let connectivityService;
   let mockClient;
+  let successSpy;
+  let errorSpy;
+  let verboseSpy;
   
-  // Create fresh instances before each test
+  // Setup before each test
   beforeEach(() => {
-    mockClient = new WebDAVClientStub();
-    connectivityService = new ConnectivityServiceStub(mockClient);
+    // Create spies for logger functions
+    successSpy = spyOn(logger, 'success');
+    errorSpy = spyOn(logger, 'error');
+    verboseSpy = spyOn(logger, 'verbose');
+    
+    // Create mock client with methods that return promises
+    mockClient = {
+      getDirectoryContents: async (path) => {
+        if (path === '/error') {
+          throw new Error('Connection error');
+        }
+        
+        if (path === '/timeout') {
+          throw new Error('Request timed out');
+        }
+        
+        if (path === '/auth') {
+          const error = new Error('Unauthorized');
+          error.status = 401;
+          throw error;
+        }
+        
+        if (path === '/notfound') {
+          const error = new Error('Not Found');
+          error.status = 404;
+          throw error;
+        }
+        
+        return [
+          { basename: 'file1.txt', filename: '/path/to/file1.txt', type: 'file' },
+          { basename: 'file2.txt', filename: '/path/to/file2.txt', type: 'file' }
+        ];
+      }
+    };
+    
+    // Create connectivity service with the mock client
+    connectivityService = new WebDAVConnectivityService(mockClient, logger.Verbosity.Normal);
+  });
+  
+  describe('constructor', () => {
+    it('should initialize with the provided client and verbosity', () => {
+      const testClient = {};
+      const testVerbosity = logger.Verbosity.Verbose;
+      
+      const service = new WebDAVConnectivityService(testClient, testVerbosity);
+      
+      expect(service.client).toBe(testClient);
+      expect(service.verbosity).toBe(testVerbosity);
+    });
+    
+    it('should use default verbosity if not provided', () => {
+      const testClient = {};
+      
+      const service = new WebDAVConnectivityService(testClient);
+      
+      expect(service.client).toBe(testClient);
+      expect(service.verbosity).toBe(logger.Verbosity.Normal);
+    });
   });
   
   describe('checkConnectivity', () => {
-    it('should return true when the server is reachable', async () => {
-      // Configure mock to return true for exists
-      mockClient.exists = async () => true;
+    it('should return true when server is reachable', async () => {
+      const isConnected = await connectivityService.checkConnectivity();
       
-      const result = await connectivityService.checkConnectivity();
-      
-      expect(result).toBe(true);
+      expect(isConnected).toBe(true);
+      expect(successSpy).toHaveBeenCalledWith('WebDAV server is reachable', logger.Verbosity.Normal);
     });
     
-    it('should return false when the server is not reachable', async () => {
-      // Configure mock to return false for exists
-      mockClient.exists = async () => false;
-      
-      const result = await connectivityService.checkConnectivity();
-      
-      expect(result).toBe(false);
-    });
-    
-    it('should handle different types of errors', async () => {
-      // Configure mock to throw an error
-      mockClient.exists = async () => {
+    it('should return false when server is not reachable', async () => {
+      mockClient.getDirectoryContents = async () => {
         throw new Error('Connection error');
       };
       
-      const result = await connectivityService.checkConnectivity();
+      const isConnected = await connectivityService.checkConnectivity();
       
-      expect(result).toBe(false);
+      expect(isConnected).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to connect to WebDAV server: Connection error', 
+        logger.Verbosity.Normal
+      );
+    });
+    
+    it('should handle timeout errors', async () => {
+      mockClient.getDirectoryContents = async () => {
+        throw new Error('Request timed out');
+      };
+      
+      const isConnected = await connectivityService.checkConnectivity();
+      
+      expect(isConnected).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to connect to WebDAV server: Request timed out', 
+        logger.Verbosity.Normal
+      );
+    });
+    
+    it('should handle authentication errors', async () => {
+      mockClient.getDirectoryContents = async () => {
+        const error = new Error('Unauthorized');
+        error.status = 401;
+        throw error;
+      };
+      
+      const isConnected = await connectivityService.checkConnectivity();
+      
+      expect(isConnected).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to connect to WebDAV server: Unauthorized', 
+        logger.Verbosity.Normal
+      );
+    });
+    
+    it('should handle 404 errors appropriately', async () => {
+      mockClient.getDirectoryContents = async () => {
+        const error = new Error('Not Found');
+        error.status = 404;
+        throw error;
+      };
+      
+      const isConnected = await connectivityService.checkConnectivity();
+      
+      expect(isConnected).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to connect to WebDAV server: Not Found', 
+        logger.Verbosity.Normal
+      );
+    });
+    
+    it('should use the provided path parameter', async () => {
+      let callPath = '';
+      mockClient.getDirectoryContents = async (path) => {
+        callPath = path;
+        return [];
+      };
+      
+      await connectivityService.checkConnectivity('/custom/path');
+      
+      expect(callPath).toBe('/custom/path');
+    });
+    
+    it('should log in appropriate verbosity modes', async () => {
+      // Create service with verbose logging
+      const verboseService = new WebDAVConnectivityService(mockClient, logger.Verbosity.Verbose);
+      
+      await verboseService.checkConnectivity();
+      
+      expect(successSpy).toHaveBeenCalledWith('WebDAV server is reachable', logger.Verbosity.Verbose);
+      
+      // Create service with quiet logging
+      const quietService = new WebDAVConnectivityService(mockClient, logger.Verbosity.Quiet);
+      
+      // Reset the spy to check quiet mode behavior
+      successSpy.mockClear();
+      
+      await quietService.checkConnectivity();
+      
+      expect(successSpy).toHaveBeenCalledWith('WebDAV server is reachable', logger.Verbosity.Quiet);
+    });
+    
+    it('should handle errors in quiet mode', async () => {
+      // Create service with quiet logging
+      const quietService = new WebDAVConnectivityService(mockClient, logger.Verbosity.Quiet);
+      
+      // Mock client to throw an error
+      mockClient.getDirectoryContents = async () => {
+        throw new Error('Connection error');
+      };
+      
+      // Reset the spy to check quiet mode behavior
+      errorSpy.mockClear();
+      
+      const isConnected = await quietService.checkConnectivity();
+      
+      expect(isConnected).toBe(false);
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Failed to connect to WebDAV server: Connection error', 
+        logger.Verbosity.Quiet
+      );
     });
   });
 }); 

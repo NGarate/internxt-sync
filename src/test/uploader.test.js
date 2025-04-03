@@ -6,7 +6,7 @@
 
 import { expect, describe, it, beforeEach, afterEach, spyOn } from 'bun:test';
 import Uploader from '../core/upload/uploader.js';
-import WebDAVService from '../core/webdav-service.js';
+import WebDAVService from '../core/webdav/webdav-service.js';
 import { HashCache } from '../core/upload/hash-cache.js';
 import { ProgressTracker } from '../core/upload/progress-tracker.js';
 import { FileUploadManager } from '../core/upload/file-upload-manager.js';

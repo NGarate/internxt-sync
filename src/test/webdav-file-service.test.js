@@ -2,14 +2,18 @@
  * Tests for WebDAV File Service
  */
 
-import { expect, describe, it, beforeEach } from 'bun:test';
+import { expect, describe, it, beforeEach, afterEach, spyOn } from 'bun:test';
 import { WebDAVFileService } from '../core/webdav/webdav-file-service.js';
 import * as logger from '../utils/logger.js';
+import * as fs from 'fs';
+import path from 'path';
+import os from 'os';
 
 describe('WebDAV File Service', () => {
   let fileService;
   let mockClient;
   let consoleOutput = '';
+  let tempFilePath = '';
   const originalConsoleLog = console.log;
   
   // Setup before each test
@@ -21,10 +25,13 @@ describe('WebDAV File Service', () => {
       return originalConsoleLog(...args);
     };
     
+    // Create a temp file for testing
+    tempFilePath = path.join(os.tmpdir(), `test-file-${Date.now()}.txt`);
+    
     // Create mock client with methods that return promises
     mockClient = {
-      putFileContents: async () => ({ success: true }),
-      getDirectoryContents: async () => ([
+      putFileContents: async (path, content) => ({ success: true }),
+      getDirectoryContents: async (path) => ([
         { basename: 'file1.txt', filename: '/path/to/file1.txt', type: 'file' },
         { basename: 'file2.txt', filename: '/path/to/file2.txt', type: 'file' }
       ])
@@ -32,25 +39,41 @@ describe('WebDAV File Service', () => {
     
     // Create file service with the mock client
     fileService = new WebDAVFileService(mockClient, logger.Verbosity.Normal);
-    
-    // Override the uploadFile method to avoid fs.readFile
-    fileService.uploadFile = async (filePath, options) => {
-      try {
-        if (filePath === '/error/read.txt') {
-          throw new Error('File read error');
-        }
-        
-        const destination = options?.destination || filePath;
-        
-        if (destination === '/error/upload.txt') {
-          return { success: false, error: 'Upload error' };
-        }
-        
-        return { success: true };
-      } catch (error) {
-        return { success: false, error: error.message };
+  });
+  
+  afterEach(() => {
+    // Clean up temp file if it exists
+    try {
+      if (fs.existsSync(tempFilePath)) {
+        fs.unlinkSync(tempFilePath);
       }
-    };
+    } catch (error) {
+      // Ignore cleanup errors
+    }
+    
+    // Restore console.log
+    console.log = originalConsoleLog;
+  });
+  
+  describe('constructor', () => {
+    it('should initialize with the provided client and verbosity', () => {
+      const testClient = {};
+      const testVerbosity = logger.Verbosity.Verbose;
+      
+      const service = new WebDAVFileService(testClient, testVerbosity);
+      
+      expect(service.client).toBe(testClient);
+      expect(service.verbosity).toBe(testVerbosity);
+    });
+    
+    it('should use default verbosity if not provided', () => {
+      const testClient = {};
+      
+      const service = new WebDAVFileService(testClient);
+      
+      expect(service.client).toBe(testClient);
+      expect(service.verbosity).toBe(logger.Verbosity.Normal);
+    });
   });
   
   describe('normalizePath', () => {
@@ -68,77 +91,148 @@ describe('WebDAV File Service', () => {
       expect(fileService.normalizePath('path/to\\file.txt')).toBe('path/to/file.txt');
       expect(fileService.normalizePath('path\\to/file.txt')).toBe('path/to/file.txt');
     });
+    
+    it('should log verbose output when normalizing paths', () => {
+      const verboseSpy = spyOn(logger, 'verbose');
+      fileService.normalizePath('path\\to\\file.txt');
+      expect(verboseSpy).toHaveBeenCalled();
+    });
   });
   
   describe('uploadFile', () => {
     it('should upload a file successfully', async () => {
-      const result = await fileService.uploadFile('/path/to/file.txt', { destination: '/remote/path/file.txt' });
+      // Create a real test file
+      fs.writeFileSync(tempFilePath, 'test content');
+      
+      // Spy on client's putFileContents
+      const putFileSpy = spyOn(mockClient, 'putFileContents');
+      const successSpy = spyOn(logger, 'success');
+      
+      const result = await fileService.uploadFile(tempFilePath, '/remote/path/file.txt');
       
       expect(result.success).toBe(true);
+      expect(putFileSpy).toHaveBeenCalledWith('/remote/path/file.txt', expect.any(Buffer));
+      expect(successSpy).toHaveBeenCalled();
     });
     
     it('should handle file read errors', async () => {
-      const result = await fileService.uploadFile('/error/read.txt', { destination: '/remote/path/file.txt' });
+      const nonExistentFile = '/path/to/nonexistent/file.txt';
+      const errorSpy = spyOn(logger, 'error');
+      
+      const result = await fileService.uploadFile(nonExistentFile, '/remote/path/file.txt');
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('File read error');
+      expect(result.output).toContain('No such file or directory');
+      expect(errorSpy).toHaveBeenCalled();
     });
     
     it('should handle upload errors', async () => {
-      const result = await fileService.uploadFile('/path/to/file.txt', { destination: '/error/upload.txt' });
+      // Create a real test file
+      fs.writeFileSync(tempFilePath, 'test content');
+      
+      // Mock client to throw an error
+      mockClient.putFileContents = async () => {
+        throw new Error('Upload failed');
+      };
+      
+      const errorSpy = spyOn(logger, 'error');
+      
+      const result = await fileService.uploadFile(tempFilePath, '/remote/path/file.txt');
       
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Upload error');
+      expect(result.output).toBe('Upload failed');
+      expect(errorSpy).toHaveBeenCalled();
+    });
+    
+    it('should normalize the target path before uploading', async () => {
+      // Create a real test file
+      fs.writeFileSync(tempFilePath, 'test content');
+      
+      // Spy on normalizePath
+      const normalizeSpy = spyOn(fileService, 'normalizePath');
+      
+      await fileService.uploadFile(tempFilePath, 'remote\\path\\file.txt');
+      
+      expect(normalizeSpy).toHaveBeenCalledWith('remote\\path\\file.txt');
+    });
+    
+    it('should respect the default timeout parameter', async () => {
+      // Create a real test file
+      fs.writeFileSync(tempFilePath, 'test content');
+      
+      const result = await fileService.uploadFile(tempFilePath, '/remote/path/file.txt');
+      
+      // We're testing that the default parameter doesn't cause issues
+      expect(result.success).toBe(true);
+    });
+    
+    it('should accept a custom timeout parameter', async () => {
+      // Create a real test file
+      fs.writeFileSync(tempFilePath, 'test content');
+      
+      const result = await fileService.uploadFile(tempFilePath, '/remote/path/file.txt', 120);
+      
+      // We're testing that a custom timeout parameter doesn't cause issues
+      expect(result.success).toBe(true);
     });
   });
   
   describe('getDirectoryContents', () => {
     it('should get directory contents successfully', async () => {
-      // The original implementation calls mockClient.getDirectoryContents and extracts basename
-      // We'll mock that behavior directly for testing
-      fileService.getDirectoryContents = async (path = '/') => {
-        try {
-          const contents = await mockClient.getDirectoryContents();
-          return contents.map(item => item.basename);
-        } catch (error) {
-          console.log(`Error listing directory ${path}: ${error.message}`);
-          return [];
-        }
-      };
+      const getContentsSpy = spyOn(mockClient, 'getDirectoryContents');
       
-      const files = await fileService.getDirectoryContents('/some/directory');
+      const result = await fileService.getDirectoryContents('/some/directory');
       
-      expect(Array.isArray(files)).toBe(true);
-      expect(files.length).toBe(2);
-      expect(files).toContain('file1.txt');
-      expect(files).toContain('file2.txt');
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(2);
+      expect(getContentsSpy).toHaveBeenCalledWith('/some/directory');
     });
     
     it('should use root path by default', async () => {
-      // For this test, we'll track if the path is set to root
-      let pathUsed = null;
-      
-      fileService.getDirectoryContents = async (path = '/') => {
-        pathUsed = path;
-        return ['file1.txt', 'file2.txt'];
-      };
+      const getContentsSpy = spyOn(mockClient, 'getDirectoryContents');
       
       await fileService.getDirectoryContents();
       
-      expect(pathUsed).toBe('/');
+      expect(getContentsSpy).toHaveBeenCalledWith('/');
+    });
+    
+    it('should normalize the directory path', async () => {
+      const normalizeSpy = spyOn(fileService, 'normalizePath');
+      const getContentsSpy = spyOn(mockClient, 'getDirectoryContents');
+      
+      await fileService.getDirectoryContents('some\\directory');
+      
+      expect(normalizeSpy).toHaveBeenCalledWith('some\\directory');
+      expect(getContentsSpy).toHaveBeenCalledWith('some/directory');
     });
     
     it('should handle directory listing errors', async () => {
-      fileService.getDirectoryContents = async (path = '/') => {
-        console.log(`Error listing directory ${path}: Directory listing error`);
-        return [];
+      // Mock client to throw an error
+      mockClient.getDirectoryContents = async () => {
+        throw new Error('Directory listing error');
       };
       
-      const files = await fileService.getDirectoryContents('/some/directory');
+      const errorSpy = spyOn(logger, 'error');
       
-      expect(Array.isArray(files)).toBe(true);
-      expect(files.length).toBe(0);
-      expect(consoleOutput).toContain('Error listing directory');
+      const result = await fileService.getDirectoryContents('/some/directory');
+      
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(0);
+      expect(errorSpy).toHaveBeenCalled();
+    });
+    
+    it('should return empty array for non-existent directories', async () => {
+      // Mock client to throw a 404 error
+      mockClient.getDirectoryContents = async () => {
+        const error = new Error('Not Found');
+        error.status = 404;
+        throw error;
+      };
+      
+      const result = await fileService.getDirectoryContents('/nonexistent');
+      
+      expect(Array.isArray(result)).toBe(true);
+      expect(result.length).toBe(0);
     });
   });
 }); 

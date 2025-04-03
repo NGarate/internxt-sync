@@ -21,12 +21,13 @@ export class WebDAVConnectivityService {
 
   /**
    * Check if the WebDAV server is accessible
+   * @param {string} path - The path to check (defaults to root)
    * @returns {Promise<boolean>} True if the server is accessible
    */
-  async checkConnectivity() {
+  async checkConnectivity(path = '/') {
     try {
-      // Try to list the root directory
-      await this.client.getDirectoryContents('/');
+      // Try to list the directory at the specified path
+      await this.client.getDirectoryContents(path);
       logger.success(`WebDAV server is reachable`, this.verbosity);
       return true;
     } catch (error) {
