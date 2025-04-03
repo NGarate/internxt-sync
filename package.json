@@ -15,10 +15,8 @@
     "build:bundle": "bun build src/main/internxt-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
     "build:clean": "bun run clean && bun run build",
     "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
-    "test": "bun test-config/scripts/run-tests.ts working",
-    "test:all": "bun test-config/scripts/run-tests.ts all",
-    "test:src": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/helpers/setup.ts src/test/logger.test.ts src/test/progress-tracker.test.ts src/test/uploader.test.ts",
-    "prepare:publish": "bun run clean && bun run build:bundle && bun run test:src",
+    "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/helpers/setup.ts",
+    "prepare:publish": "bun run clean && bun run build:bundle && bun run test",
     "prepublishOnly": "bun run clean && bun run build:bundle"
   },
   "keywords": [

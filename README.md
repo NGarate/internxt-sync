@@ -107,20 +107,19 @@ bun run build
 
 ## Testing
 
-The project includes a comprehensive test suite organized in the `test-config` directory. This separation keeps test configurations separate from the main codebase.
+The project includes a comprehensive test suite:
 
 ```bash
-# Run working tests
-bun run test
-
 # Run all tests
-bun run test:all
-
-# Run specific tests
-bun run test:src
+bun run test
 ```
 
-For more details on testing, see the `test-config/README.md` file.
+Bun's built-in test runner is configured in `bunfig.toml` to automatically:
+- Load test setup files
+- Mock external dependencies
+- Find and execute all `*.test.ts` files
+
+For more details on Bun's test runner, see the [official documentation](https://bun.sh/docs/cli/test).
 
 ## License
 
