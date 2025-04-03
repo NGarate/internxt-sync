@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- Allways remember KISS, don't overcomplicate things, try the simple solution first.
+- Cleanup after the changes, check if anything could be removed or refactored in order to improve readability.
+- Follow Clean principles and the boy scout rule.

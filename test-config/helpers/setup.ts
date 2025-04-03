@@ -7,8 +7,35 @@ import { afterAll, beforeAll, beforeEach, afterEach, describe, expect, mock, spy
 // Set test environment
 process.env.NODE_ENV = 'test';
 
-// Register all mocks
-import './register-mocks';
+// Register mock implementations
+// Inlined from the previous register-mocks.ts file
+// Mock for chalk
+const mockChalk = {
+  blue: (text) => `\x1b[34m${text}\x1b[0m`,
+  green: (text) => `\x1b[32m${text}\x1b[0m`,
+  yellow: (text) => `\x1b[33m${text}\x1b[0m`,
+  red: (text) => `\x1b[31m${text}\x1b[0m`,
+  default: {
+    blue: (text) => `\x1b[34m${text}\x1b[0m`,
+    green: (text) => `\x1b[32m${text}\x1b[0m`,
+    yellow: (text) => `\x1b[33m${text}\x1b[0m`,
+    red: (text) => `\x1b[31m${text}\x1b[0m`
+  }
+};
+
+// Mock for webdav
+const mockWebdav = {
+  createClient: () => ({
+    putFileContents: async () => true,
+    getDirectoryContents: async () => [],
+    exists: async () => false,
+    createDirectory: async () => true,
+  }),
+};
+
+// Register mocks globally
+globalThis.mockChalk = mockChalk;
+globalThis.mockWebdav = mockWebdav;
 
 // Original console methods for restoration
 const originalConsole = {

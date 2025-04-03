@@ -6,10 +6,15 @@
 # Test files
 /test/
 /src/test/
+/test-config/
 **/*.test.ts
 **/*.test.js
 **/*.spec.ts
 **/*.spec.js
+/.bun.test.js
+/bun-test-loader.ts
+/buntest.config.ts
+bun-test-*
 
 # Development files
 .git/

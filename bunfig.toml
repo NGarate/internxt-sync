@@ -24,7 +24,7 @@ enabled = true
 # Test configuration
 [test]
 # Configure preload scripts for tests
-preload = ["./src/test/test-helpers/setup.ts"]
+preload = ["./test-config/helpers/setup.ts"]
 
 # Set test environment variables
 env = { NODE_ENV = "test" }
@@ -34,8 +34,8 @@ timeout = 10000 # 10 seconds timeout for tests
 
 # Configure Bun's native module mocking for tests
 [test.mocks]
-"chalk" = "./src/test/mocks/chalk-mock.ts"
-"webdav" = "./src/test/mocks/webdav-mock.ts"
+"chalk" = "./test-config/mocks/chalk-mock.ts"
+"webdav" = "./test-config/mocks/webdav-mock.ts"
 
 # Module mapping for tests
 [test.moduleMapper]
@@ -85,4 +85,8 @@ watch = false
 # Set up module configuration
 [test]
 # Determine whether to use Jest compatibility mode
-jest = false 
+jest = false
+
+[test.loader]
+config = "./test-config/loaders/bun-test-loader.ts"
+extensions = [".ts", ".tsx"] 

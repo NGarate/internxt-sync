@@ -5,30 +5,21 @@
   "type": "module",
   "main": "dist/internxt-sync.js",
   "types": "dist/index.d.ts",
-  "scripts": {
-    "start": "node dist/internxt-sync.js",
-    "start:bun": "bun dist/internxt-sync.js",
-    "upload": "bun internxt-sync.ts --upload",
-    "dev": "bun --watch internxt-sync.ts",
-    "build": "bun build internxt-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
-    "build:bundle": "bun build internxt-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
-    "build:prod": "tsc -p tsconfig.build.json",
-    "build:clean": "bun clean:win && bun run build",
-    "clean:win": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
-    "cleanup:js": "bun scripts/cleanup-js.ts",
-    "find:unused": "bun run next-unused",
-    "find:unused:custom": "bun scripts/find-unused.ts",
-    "test": "bun scripts/run-tests.ts working",
-    "test:all": "bun scripts/run-tests.ts all",
-    "test:mocked": "bun scripts/run-tests.ts mocked",
-    "test:file": "bun scripts/run-tests.ts specific",
-    "test:watch": "bun test --watch --tsconfig-override tsconfig.test.json --preload ./src/test/test-helpers/setup.ts src/test/fs-utils.test.ts src/test/webdav-directory-service.test.ts src/test/file-scanner.test.ts",
-    "test:src": "bun test --tsconfig-override tsconfig.test.json --preload ./src/test/test-helpers/setup.ts src/test/logger.test.ts src/test/progress-tracker.test.ts src/test/uploader.test.ts",
-    "prepare:publish": "bun clean:win && bun run build:bundle && bun run test:src",
-    "prepublishOnly": "bun clean:win && bun run build:bundle"
-  },
   "bin": {
     "internxt-sync": "dist/bin.js"
+  },
+  "scripts": {
+    "start": "node dist/internxt-sync.js",
+    "dev": "bun --watch src/main/internxt-sync.ts",
+    "build": "bun build src/main/internxt-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
+    "build:bundle": "bun build src/main/internxt-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
+    "build:clean": "bun run clean && bun run build",
+    "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
+    "test": "bun test-config/scripts/run-tests.ts working",
+    "test:all": "bun test-config/scripts/run-tests.ts all",
+    "test:src": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/helpers/setup.ts src/test/logger.test.ts src/test/progress-tracker.test.ts src/test/uploader.test.ts",
+    "prepare:publish": "bun run clean && bun run build:bundle && bun run test:src",
+    "prepublishOnly": "bun run clean && bun run build:bundle"
   },
   "keywords": [
     "internxt",
@@ -62,7 +53,6 @@
   "devDependencies": {
     "@types/node": "^20.17.30",
     "bun-types": "^1.2.8",
-    "next-unused": "^0.0.6",
     "typescript": "^5.8.2"
   },
   "dependencies": {
@@ -80,7 +70,7 @@
       "node_modules"
     ],
     "entrypoints": [
-      "internxt-sync.ts",
+      "src/main/internxt-sync.ts",
       "index.ts",
       "bin.js"
     ]

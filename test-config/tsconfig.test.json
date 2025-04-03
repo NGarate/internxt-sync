@@ -1,13 +1,13 @@
 {
-  "extends": "./tsconfig.json",
+  "extends": "../tsconfig.json",
   "compilerOptions": {
     "noImplicitAny": false,
     "types": ["bun-types", "node"],
     "isolatedModules": true,
     "allowSyntheticDefaultImports": true,
     "paths": {
-      "chalk": ["./src/test/mocks/chalk-mock.ts"],
-      "webdav": ["./src/test/mocks/webdav-mock.ts"]
+      "chalk": ["./test-config/mocks/chalk-mock.ts"],
+      "webdav": ["./test-config/mocks/webdav-mock.ts"]
     },
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true

@@ -1,6 +1,6 @@
 # Internxt Sync
 
-A high-performance command-line tool for synchronizing and uploading files to Internxt Drive, optimized for Bun with Node.js compatibility.
+A high-performance command-line tool for synchronizing and uploading files to Internxt Drive, optimized for Node.js with enhanced performance when using Bun.
 
 ## Features
 
@@ -12,61 +12,36 @@ A high-performance command-line tool for synchronizing and uploading files to In
 - Directory structure preservation
 - Target directory specification
 - Automatic WebDAV URL detection
-- Runtime environment detection (Bun or Node.js)
-- Universal entry point that works in any environment
 - Cross-platform support (Windows, macOS, Linux)
 
 ## Requirements
 
-- **Recommended**: [Bun](https://bun.sh/) runtime (for optimal performance)
-- **Alternative**: Node.js 14.16.0+
+- Node.js 14.16.0+
 - Internxt account (free or paid)
+- (Optional) [Bun](https://bun.sh/) runtime for enhanced development experience
 
 ## Installation
 
-### Preferred: Install with Bun (Recommended)
+### Install with npm (Recommended for most users)
 
 ```bash
-# Install globally with Bun (recommended for best performance)
-bun install -g internxt-sync
+# Install globally with npm
+npm install -g internxt-sync
 ```
 
-### Alternative: Install with npm
+### Alternative: Install with Bun
 
 ```bash
-# Install globally with npm if Bun is not available
-npm install -g internxt-sync
+# Install globally with Bun (for Bun users)
+bun install -g internxt-sync
 ```
 
 ## Usage
 
-### Recommended Usage with Bun
-
 ```bash
-# If installed globally with Bun (recommended)
+# Basic usage
 internxt-sync <source-dir> [options]
-
-# Or run the TypeScript file directly (fastest)
-bun internxt-sync.ts <source-dir> [options]
 ```
-
-### Alternative Usage with Node.js
-
-```bash
-# If installed globally with npm
-internxt-sync <source-dir> [options]
-
-# Or run with Node.js directly
-node index.js <source-dir> [options]
-```
-
-When run:
-
-- The tool automatically detects your runtime environment (Bun or Node.js)
-- With Bun: Executes the TypeScript file directly for maximum performance
-- With Node.js: Uses the pre-compiled JavaScript version
-- If the JavaScript file doesn't exist, it will try to compile it automatically if Bun is available
-- All platform-specific operations are handled internally
 
 ### Options
 
@@ -82,72 +57,70 @@ When run:
 
 ```bash
 # Upload files with default settings
-bun internxt-sync.ts /path/to/files
+internxt-sync /path/to/files
 
 # Upload files with 4 concurrent uploads
-bun internxt-sync.ts /path/to/files --cores=4
+internxt-sync /path/to/files --cores=4
 
 # Upload files to a specific target directory
-bun internxt-sync.ts /path/to/files --target=backup/daily
+internxt-sync /path/to/files --target=backup/daily
 
 # Upload with minimal output
-bun internxt-sync.ts /path/to/files --quiet
+internxt-sync /path/to/files --quiet
 
 # Skip setup but auto-detect WebDAV URL
-bun internxt-sync.ts /path/to/files --skip-setup
+internxt-sync /path/to/files --skip-setup
 
 # Skip setup and use a specific WebDAV URL
-bun internxt-sync.ts /path/to/files --skip-setup --webdav-url=http://webdav.local.internxt.com:3005
+internxt-sync /path/to/files --skip-setup --webdav-url=http://webdav.local.internxt.com:3005
 ```
 
 ## How It Works
 
-1. The tool detects your runtime environment (Bun or Node.js)
-2. It selects the appropriate version to run based on the detected environment:
-   - **With Bun**: Executes the TypeScript code directly for maximum performance
-   - **With Node.js**: Uses the pre-compiled JavaScript version as fallback
-3. It checks if Internxt CLI is installed and installs it if necessary (unless `--skip-setup` is used)
-   - Will try to install with Bun first if available, falling back to npm
-4. It verifies if you're logged into your Internxt account and assists with login if needed (unless `--skip-setup` is used)
-5. It ensures WebDAV is enabled for your Internxt Drive and detects the WebDAV URL
-6. The tool scans the source directory for files and calculates checksums
-7. It uploads files that have changed since the last run
-8. Progress is displayed with a visual progress bar
+1. The tool checks if Internxt CLI is installed and installs it if necessary (unless `--skip-setup` is used)
+2. It verifies if you're logged into your Internxt account and assists with login if needed (unless `--skip-setup` is used)
+3. It ensures WebDAV is enabled for your Internxt Drive and detects the WebDAV URL
+4. The tool scans the source directory for files and calculates checksums
+5. It uploads files that have changed since the last run
+6. Progress is displayed with a visual progress bar
 
 With `--skip-setup`, the tool will still try to detect the WebDAV URL from the Internxt CLI without going through the full setup process, making subsequent runs faster.
 
-## Development
+## For Developers
+
+If you want to contribute to the project or use it for development:
 
 ```bash
 # Clone the repository
 git clone https://github.com/ngarate/internxt-sync.git
 cd internxt-sync
 
-# Install dependencies with Bun (recommended)
+# Install dependencies with Bun (recommended for development)
 bun install
 
-# Run tests with Bun
-bun test
+# Run tests
+bun run test
 
-# Build with Bun (fastest)
+# Build the project
 bun run build
 ```
 
-## Runtime Environment
+## Testing
 
-Internxt Sync is designed with a Bun-first approach for maximum performance:
+The project includes a comprehensive test suite organized in the `test-config` directory. This separation keeps test configurations separate from the main codebase.
 
-### For Users
+```bash
+# Run working tests
+bun run test
 
-- **Recommended: Bun Runtime** - The tool will use Bun for maximum performance, running the TypeScript code directly.
-- **Fallback: Node.js Runtime** - If Bun is not available, the tool will automatically use the pre-compiled JavaScript version.
-- **Automatic Detection** - No configuration needed; the tool detects the available runtime.
+# Run all tests
+bun run test:all
 
-### For Developers
+# Run specific tests
+bun run test:src
+```
 
-- **Development**: Use Bun for the best development experience with faster builds and tests.
-- **Testing**: Tests are written for Bun's test runner.
-- **Building**: The build process uses Bun if available, with clear instructions if it's not.
+For more details on testing, see the `test-config/README.md` file.
 
 ## License
 

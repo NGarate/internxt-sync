@@ -46,7 +46,7 @@ function isBunAvailable(): boolean {
 // Main function to run the appropriate version
 async function main(): Promise<void> {
   const args = process.argv.slice(2);
-  const tsFile = path.join(__dirname, 'internxt-sync.ts');
+  const tsFile = path.join(__dirname, 'src', 'main', 'internxt-sync.ts');
   const jsFile = path.join(__dirname, 'dist', 'internxt-sync.js');
   
   try {
@@ -54,7 +54,7 @@ async function main(): Promise<void> {
     if (isBunRuntime) {
       if (fs.existsSync(tsFile)) {
         try {
-          const module = await import('./internxt-sync.ts');
+          const module = await import('./src/main/internxt-sync.ts');
           if (typeof module.default === 'function') {
             return module.default();
           } else {
@@ -125,11 +125,11 @@ async function runJavaScriptVersion(): Promise<void> {
     }
   } else {
     // If JS file doesn't exist, try to build it if we have Bun
-    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'internxt-sync.ts'))) {
+    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'src', 'main', 'internxt-sync.ts'))) {
       console.log(`${colors.yellow}JavaScript version not found, attempting to build it...${colors.reset}`);
       
       try {
-        execSync('bun build internxt-sync.ts --outdir dist --target node --external chalk,webdav', {
+        execSync('bun build src/main/internxt-sync.ts --outdir dist --target node --external chalk,webdav', {
           stdio: 'inherit',
           cwd: __dirname
         });

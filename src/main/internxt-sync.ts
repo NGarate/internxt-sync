@@ -8,13 +8,13 @@
 import chalk from 'chalk';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { getOptimalConcurrency, isBunEnvironment } from './src/utils/env-utils.js';
-import * as logger from './src/utils/logger.js';
-import { parseArguments } from './src/utils/input-utils.js';
-import { showHelp } from './src/utils/help-text.js';
-import InternxtCLI from './src/core/internxt-cli.js';
-import FileScanner from './src/core/file-scanner.js';
-import Uploader from './src/core/upload/uploader.js';
+import { getOptimalConcurrency, isBunEnvironment } from '../utils/env-utils.js';
+import * as logger from '../utils/logger.js';
+import { parseArguments } from '../utils/input-utils.js';
+import { showHelp } from '../utils/help-text.js';
+import InternxtCLI from '../core/internxt-cli.js';
+import FileScanner from '../core/file-scanner.js';
+import Uploader from '../core/upload/uploader.js';
 
 // Get the directory name for ES modules
 const __filename = fileURLToPath(import.meta.url);
@@ -123,4 +123,4 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   });
 }
 
-export default main;
+export default main; 
