@@ -37,6 +37,18 @@ describe('File System Utilities', () => {
       expect(fsUtils.urlEncodePath('trailing/slash/')).toBe('trailing/slash/');
       expect(fsUtils.urlEncodePath('/both/slashes/')).toBe('/both/slashes/');
     });
+
+    it('should normalize backslashes to forward slashes before encoding', () => {
+      expect(fsUtils.urlEncodePath('path\\with\\backslashes')).toBe('path/with/backslashes');
+      expect(fsUtils.urlEncodePath('mixed/path\\style')).toBe('mixed/path/style');
+      expect(fsUtils.urlEncodePath('core\\upload\\file.js')).toBe('core/upload/file.js');
+      expect(fsUtils.urlEncodePath('path with spaces\\and special\\chars')).toBe('path%20with%20spaces/and%20special/chars');
+    });
+
+    it('should handle windows-style paths correctly', () => {
+      expect(fsUtils.urlEncodePath('C:\\Users\\name\\Documents')).toBe('C%3A/Users/name/Documents');
+      expect(fsUtils.urlEncodePath('D:\\Projects\\test file.txt')).toBe('D%3A/Projects/test%20file.txt');
+    });
   });
   
   // Test checksum calculation

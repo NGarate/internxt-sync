@@ -16,11 +16,15 @@ export const writeFileAsync = promisify(fs.writeFile);
 
 /**
  * URL encode path components
- * @param {string} path - The path to encode
+ * @param {string} pathToEncode - The path to encode
  * @returns {string} The URL encoded path
  */
-export function urlEncodePath(path) {
-  return path.split('/').map(component => 
+export function urlEncodePath(pathToEncode) {
+  // Replace backslashes with forward slashes before encoding
+  const normalizedPath = pathToEncode.replace(/\\/g, '/');
+  
+  // Split by forward slash and encode each component
+  return normalizedPath.split('/').map(component => 
     encodeURIComponent(component)
   ).join('/');
 }

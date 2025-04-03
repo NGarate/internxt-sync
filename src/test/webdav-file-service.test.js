@@ -53,6 +53,23 @@ describe('WebDAV File Service', () => {
     };
   });
   
+  describe('normalizePath', () => {
+    it('should convert backslashes to forward slashes', () => {
+      expect(fileService.normalizePath('path\\to\\file.txt')).toBe('path/to/file.txt');
+      expect(fileService.normalizePath('C:\\Users\\Documents')).toBe('C:/Users/Documents');
+    });
+
+    it('should leave forward slashes unchanged', () => {
+      expect(fileService.normalizePath('path/to/file.txt')).toBe('path/to/file.txt');
+      expect(fileService.normalizePath('/root/path')).toBe('/root/path');
+    });
+
+    it('should handle mixed slash styles', () => {
+      expect(fileService.normalizePath('path/to\\file.txt')).toBe('path/to/file.txt');
+      expect(fileService.normalizePath('path\\to/file.txt')).toBe('path/to/file.txt');
+    });
+  });
+  
   describe('uploadFile', () => {
     it('should upload a file successfully', async () => {
       const result = await fileService.uploadFile('/path/to/file.txt', { destination: '/remote/path/file.txt' });

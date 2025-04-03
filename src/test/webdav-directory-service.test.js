@@ -34,17 +34,23 @@ class WebDAVClientStub {
   }
 }
 
-// Stub directory service for testing
+// Stub directory service for testing that includes our new implementations
 class DirectoryServiceStub {
   constructor(client, verbosity = 2) {
     this.client = client;
     this.verbosity = verbosity;
     this.logs = [];
+    this.createdDirectories = new Set();
   }
   
   _log(type, message) {
     this.logs.push({ type, message });
     console[type](message);
+  }
+
+  normalizePath(path) {
+    const normalized = path.replace(/\\/g, '/');
+    return normalized;
   }
 
   /**
@@ -55,10 +61,30 @@ class DirectoryServiceStub {
    */
   async createDirectory(dirPath, targetPath = dirPath) {
     try {
-      await this.client.createDirectory(targetPath);
-      this._log('log', `Created directory: ${targetPath}`);
+      const normalizedPath = this.normalizePath(targetPath);
+      
+      // Skip if already created in this session
+      if (this.createdDirectories.has(normalizedPath)) {
+        this._log('log', `Directory already created: ${normalizedPath}`);
+        return true;
+      }
+      
+      await this.client.createDirectory(normalizedPath);
+      
+      // Add to tracking set
+      this.createdDirectories.add(normalizedPath);
+      
+      this._log('log', `Created directory: ${normalizedPath}`);
       return true;
     } catch (error) {
+      // If error has status 405 or 409, directory might already exist
+      const statusCode = error.status || error.response?.status;
+      if (statusCode === 405 || statusCode === 409) {
+        this._log('log', `Directory already exists: ${targetPath}`);
+        this.createdDirectories.add(this.normalizePath(targetPath));
+        return true;
+      }
+      
       this._log('error', `Error creating directory ${targetPath}: ${error.message}`);
       return false;
     }
@@ -75,7 +101,7 @@ class DirectoryServiceStub {
     }
     
     // Normalize path to handle both Windows and Unix paths
-    const normalizedPath = dirPath.replace(/\\/g, '/');
+    const normalizedPath = this.normalizePath(dirPath);
     
     // Split the path into components
     const parts = normalizedPath.split('/').filter(Boolean);
@@ -113,6 +139,23 @@ describe('WebDAV Directory Service', () => {
     directoryService = new DirectoryServiceStub(mockClient);
   });
   
+  describe('normalizePath', () => {
+    it('should convert backslashes to forward slashes', () => {
+      expect(directoryService.normalizePath('path\\to\\dir')).toBe('path/to/dir');
+      expect(directoryService.normalizePath('C:\\Users\\Documents')).toBe('C:/Users/Documents');
+    });
+
+    it('should leave forward slashes unchanged', () => {
+      expect(directoryService.normalizePath('path/to/dir')).toBe('path/to/dir');
+      expect(directoryService.normalizePath('/root/path')).toBe('/root/path');
+    });
+
+    it('should handle mixed slash styles', () => {
+      expect(directoryService.normalizePath('path/to\\dir')).toBe('path/to/dir');
+      expect(directoryService.normalizePath('path\\to/dir')).toBe('path/to/dir');
+    });
+  });
+  
   describe('createDirectory', () => {
     it('should create a directory successfully', async () => {
       const result = await directoryService.createDirectory('/test/dir');
@@ -137,6 +180,21 @@ describe('WebDAV Directory Service', () => {
       expect(result).toBe(false);
       expect(directoryService.logs.some(log => 
         log.type === 'error' && log.message.includes('Error creating directory')
+      )).toBe(true);
+    });
+    
+    it('should skip creation for already created directories', async () => {
+      // First create the directory
+      await directoryService.createDirectory('/test/dir');
+      mockClient.calls.createDirectory = []; // Reset calls
+      
+      // Try to create it again
+      const result = await directoryService.createDirectory('/test/dir');
+      
+      expect(result).toBe(true);
+      expect(mockClient.calls.createDirectory.length).toBe(0); // No new calls
+      expect(directoryService.logs.some(log => 
+        log.message.includes('Directory already created')
       )).toBe(true);
     });
   });

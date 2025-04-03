@@ -1,3 +1,4 @@
+// This file was modified to test directory structure during upload
 /**
  * Help text utility for the Internxt Sync
  * Handles generation of command-line help documentation

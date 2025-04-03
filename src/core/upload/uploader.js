@@ -79,10 +79,27 @@ export default class Uploader {
         await this.webdavService.createDirectoryStructure(this.targetDir);
       }
 
+      // Normalize the relative path to use forward slashes
+      const normalizedRelativePath = fileInfo.relativePath.replace(/\\/g, '/');
+      
+      // Extract directory from the relative path
+      const lastSlashIndex = normalizedRelativePath.lastIndexOf('/');
+      if (lastSlashIndex > 0) {
+        const directory = normalizedRelativePath.substring(0, lastSlashIndex);
+        logger.verbose(`Ensuring directory structure exists for file: ${directory}`, this.verbosity);
+        
+        // Create the directory structure for the file
+        const fullDirectoryPath = this.targetDir
+          ? `${this.targetDir}/${directory}`
+          : directory;
+          
+        await this.webdavService.createDirectoryStructure(fullDirectoryPath);
+      }
+
       // Construct the target path
       const targetPath = this.targetDir 
-        ? `${this.targetDir}/${fileInfo.relativePath}` 
-        : fileInfo.relativePath;
+        ? `${this.targetDir}/${normalizedRelativePath}` 
+        : normalizedRelativePath;
       
       // Upload the file
       const result = await this.webdavService.uploadFile(fileInfo.absolutePath, targetPath);

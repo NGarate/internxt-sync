@@ -281,6 +281,39 @@ describe('Uploader', () => {
         filePath: fileInfo.relativePath 
       });
     });
+    
+    it('should handle Windows-style paths correctly', async () => {
+      // Setup mocks for file hash check and directory creation
+      spyOn(uploader.hashCache, 'hasChanged').mockImplementation(() => Promise.resolve(true));
+      spyOn(uploader.webdavService, 'createDirectoryStructure').mockImplementation(() => Promise.resolve(true));
+      
+      // Get the target directory value that the uploader will use
+      const targetDir = uploader.targetDir;
+      const expectedPath = targetDir ? `${targetDir}/parent/child/file.txt` : 'parent/child/file.txt';
+      
+      // Create a spy to verify that normalized paths are used
+      const uploadSpy = spyOn(uploader.webdavService, 'uploadFile').mockImplementation(
+        (absolutePath, targetPath) => {
+          expect(targetPath).toBe(expectedPath);
+          return Promise.resolve({ success: true });
+        }
+      );
+      
+      const fileInfo = {
+        absolutePath: 'C:\\path\\to\\file.txt',
+        relativePath: 'parent\\child\\file.txt',
+        checksum: 'test-checksum'
+      };
+      
+      const result = await uploader.handleFileUpload(fileInfo);
+      
+      expect(result.success).toBe(true);
+      expect(uploadSpy).toHaveBeenCalled();
+      
+      // Verify directory creation was called with correct path
+      const expectedDirPath = targetDir ? `${targetDir}/parent/child` : 'parent/child';
+      expect(uploader.webdavService.createDirectoryStructure).toHaveBeenCalledWith(expectedDirPath);
+    });
   });
   
   describe('startUpload', () => {

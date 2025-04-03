@@ -1,3 +1,4 @@
+// This file was modified to test the upload process
 /**
  * Logger utility for the Internxt WebDAV Uploader
  * Handles console output with color formatting and verbosity levels

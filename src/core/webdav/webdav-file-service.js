@@ -4,7 +4,6 @@
  */
 
 import * as logger from '../../utils/logger.js';
-import { urlEncodePath } from '../../utils/fs-utils.js';
 import * as fs from 'fs';
 
 /**
@@ -22,6 +21,17 @@ export class WebDAVFileService {
   }
 
   /**
+   * Normalize a path by replacing backslashes with forward slashes
+   * @param {string} path - The path to normalize
+   * @returns {string} The normalized path
+   */
+  normalizePath(path) {
+    const normalized = path.replace(/\\/g, '/');
+    logger.verbose(`Path normalized: "${path}" → "${normalized}"`, this.verbosity);
+    return normalized;
+  }
+
+  /**
    * Upload a file using WebDAV client
    * @param {string} filePath - Path to the file to upload
    * @param {string} targetPath - Target path on the server
@@ -32,13 +42,14 @@ export class WebDAVFileService {
     try {
       logger.verbose(`Uploading file: ${filePath} to /${targetPath}`, this.verbosity);
       
-      const encodedPath = urlEncodePath(targetPath);
+      const normalizedPath = this.normalizePath(targetPath);
+      logger.verbose(`Using normalized path for upload: "${normalizedPath}"`, this.verbosity);
       
       // Read the file
       const fileContent = await fs.promises.readFile(filePath);
       
       // Upload using WebDAV client
-      await this.client.putFileContents(encodedPath, fileContent);
+      await this.client.putFileContents(normalizedPath, fileContent);
       
       logger.success(`File uploaded successfully: ${filePath}`, this.verbosity);
       return { success: true, output: 'File uploaded successfully' };
@@ -55,8 +66,8 @@ export class WebDAVFileService {
    */
   async getDirectoryContents(dirPath = '/') {
     try {
-      const encodedPath = urlEncodePath(dirPath);
-      return await this.client.getDirectoryContents(encodedPath);
+      const normalizedPath = this.normalizePath(dirPath);
+      return await this.client.getDirectoryContents(normalizedPath);
     } catch (error) {
       logger.error(`Failed to get directory contents: ${error.message}`, this.verbosity);
       return [];
