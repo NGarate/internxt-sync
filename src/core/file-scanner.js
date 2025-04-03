@@ -5,8 +5,10 @@
 
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import * as logger from '../utils/logger.js';
 import { calculateChecksum, loadJsonFromFile, saveJsonToFile } from '../utils/fs-utils.js';
+import { HashCache } from './upload/hash-cache.js';
 
 /**
  * File Scanner class to handle directory scanning and file selection
@@ -22,6 +24,13 @@ export default class FileScanner {
     this.statePath = path.join(this.sourceDir, ".internxt-upload-state.json");
     this.uploadState = { files: {}, lastRun: "" };
     this.verbosity = verbosity;
+    
+    // Use the same hash cache that the uploader will use
+    this.hashCache = new HashCache(
+      path.join(os.tmpdir(), 'internxt-hash-cache.json'),
+      verbosity
+    );
+    this.hashCache.load();
   }
 
   /**
@@ -89,6 +98,7 @@ export default class FileScanner {
             absolutePath: fullPath,
             size: stats.size,
             checksum,
+            hasChanged: null // Will be determined later
           });
         }
       }
@@ -103,13 +113,23 @@ export default class FileScanner {
   /**
    * Determine which files need to be uploaded based on checksum changes
    * @param {Array} files - Array of file information objects
-   * @returns {Array} Array of files that need to be uploaded
+   * @returns {Promise<Array>} Array of files that need to be uploaded
    */
-  determineFilesToUpload(files) {
-    return files.filter((file) => {
-      const existingChecksum = this.uploadState.files[file.relativePath];
-      return !existingChecksum || existingChecksum !== file.checksum;
-    });
+  async determineFilesToUpload(files) {
+    const filesToUpload = [];
+    
+    for (const file of files) {
+      // First check the hash cache - this will be used again during upload
+      // so this prevents unnecessary upload attempts
+      const hasChanged = await this.hashCache.hasChanged(file.absolutePath);
+      file.hasChanged = hasChanged;
+      
+      if (hasChanged) {
+        filesToUpload.push(file);
+      }
+    }
+    
+    return filesToUpload;
   }
 
   /**
@@ -127,7 +147,7 @@ export default class FileScanner {
     logger.info(`Found ${allFiles.length} files.`, this.verbosity);
 
     // Determine which files need uploading
-    const filesToUpload = this.determineFilesToUpload(allFiles);
+    const filesToUpload = await this.determineFilesToUpload(allFiles);
     logger.info(`${filesToUpload.length} files need to be uploaded.`, this.verbosity);
 
     // Calculate total size

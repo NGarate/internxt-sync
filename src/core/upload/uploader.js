@@ -63,13 +63,22 @@ export default class Uploader {
    */
   async handleFileUpload(fileInfo) {
     try {
-      // Check if file has changed
-      const hasChanged = await this.hashCache.hasChanged(fileInfo.absolutePath);
-      
-      if (!hasChanged) {
+      // Check if file has changed - use flag from file scanner if available
+      // The scanner already checked using the same hash cache
+      if (fileInfo.hasChanged === false) {
         logger.verbose(`File ${fileInfo.relativePath} has not changed, skipping upload`, this.verbosity);
         this.progressTracker.recordSuccess();
         return { success: true, filePath: fileInfo.relativePath };
+      }
+      
+      // For files not pre-checked, use the hash cache
+      if (fileInfo.hasChanged === null) {
+        const hasChanged = await this.hashCache.hasChanged(fileInfo.absolutePath);
+        if (!hasChanged) {
+          logger.verbose(`File ${fileInfo.relativePath} has not changed, skipping upload`, this.verbosity);
+          this.progressTracker.recordSuccess();
+          return { success: true, filePath: fileInfo.relativePath };
+        }
       }
 
       logger.verbose(`File ${fileInfo.relativePath} has changed, uploading...`, this.verbosity);
