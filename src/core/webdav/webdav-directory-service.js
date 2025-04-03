@@ -65,15 +65,17 @@ export class WebDAVDirectoryService {
       return true;
     } catch (error) {
       const statusCode = error.response?.status;
-      logger.verbose(`Directory creation error (${statusCode}): ${error.message}`, this.verbosity);
       
-      // If directory already exists (405 Method Not Allowed or 409 Conflict), consider it a success
-      if (statusCode === 405 || statusCode === 409) {
-        logger.verbose(`Directory already exists: ${dirPath}`, this.verbosity);
+      // If directory already exists (400, 405 Method Not Allowed or 409 Conflict), consider it a success
+      if (statusCode === 400 || statusCode === 405 || statusCode === 409) {
+        // Only log at verbose level since this is often expected
+        logger.verbose(`Directory already exists: ${dirPath} (status: ${statusCode})`, this.verbosity);
         this.createdDirectories.add(this.normalizePath(dirPath));
         return true;
       }
       
+      // Only log at verbose level to reduce noise
+      logger.verbose(`Directory creation error (${statusCode}): ${error.message}`, this.verbosity);
       logger.verbose(`Failed to create directory: ${dirPath}`, this.verbosity);
       return false;
     }
@@ -126,7 +128,8 @@ export class WebDAVDirectoryService {
         }
         
         if (!success) {
-          logger.warning(`Failed to create directory segment: /${normalizedPath} after multiple attempts`, this.verbosity);
+          // Log as verbose instead of warning to reduce noise
+          logger.verbose(`Failed to create directory segment: /${normalizedPath} after multiple attempts`, this.verbosity);
           // Continue anyway and try to upload the file
         }
       }
@@ -134,8 +137,9 @@ export class WebDAVDirectoryService {
       logger.success(`Directory structure prepared: /${targetDir}`, this.verbosity);
       return true;
     } catch (error) {
-      logger.warning(`Directory structure error: ${error.message}`, this.verbosity);
-      logger.warning(`Directory structure might already exist or couldn't be created. Continuing anyway.`, this.verbosity);
+      // Only show as warning for unexpected errors
+      logger.verbose(`Directory structure error: ${error.message}`, this.verbosity);
+      logger.verbose(`Directory structure might already exist or couldn't be created. Continuing anyway.`, this.verbosity);
       return false;
     }
   }

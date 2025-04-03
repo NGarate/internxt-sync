@@ -20,6 +20,13 @@ export class ProgressTracker {
     this.completedFiles = 0;
     this.failedFiles = 0;
     this.updateInterval = null;
+    this.isTrackingActive = false;
+    
+    // Store original console methods
+    this.originalConsoleLog = console.log;
+    this.originalConsoleInfo = console.info;
+    this.originalConsoleWarn = console.warn;
+    this.originalConsoleError = console.error;
   }
 
   /**
@@ -30,7 +37,65 @@ export class ProgressTracker {
     this.totalFiles = totalFiles;
     this.completedFiles = 0;
     this.failedFiles = 0;
-    this.displayProgress(); // Initial display
+    this.setupConsoleOverrides();
+  }
+
+  /**
+   * Set up console method overrides to preserve progress bar
+   */
+  setupConsoleOverrides() {
+    const self = this;
+    
+    // Override console methods to preserve progress bar
+    console.log = function() {
+      if (self.isTrackingActive) {
+        process.stdout.write('\r\x1B[K'); // Clear the current line
+        self.originalConsoleLog.apply(console, arguments);
+        self.displayProgress(); // Redraw progress bar
+      } else {
+        self.originalConsoleLog.apply(console, arguments);
+      }
+    };
+    
+    console.info = function() {
+      if (self.isTrackingActive) {
+        process.stdout.write('\r\x1B[K'); // Clear the current line
+        self.originalConsoleInfo.apply(console, arguments);
+        self.displayProgress(); // Redraw progress bar
+      } else {
+        self.originalConsoleInfo.apply(console, arguments);
+      }
+    };
+    
+    console.warn = function() {
+      if (self.isTrackingActive) {
+        process.stdout.write('\r\x1B[K'); // Clear the current line
+        self.originalConsoleWarn.apply(console, arguments);
+        self.displayProgress(); // Redraw progress bar
+      } else {
+        self.originalConsoleWarn.apply(console, arguments);
+      }
+    };
+    
+    console.error = function() {
+      if (self.isTrackingActive) {
+        process.stdout.write('\r\x1B[K'); // Clear the current line
+        self.originalConsoleError.apply(console, arguments);
+        self.displayProgress(); // Redraw progress bar
+      } else {
+        self.originalConsoleError.apply(console, arguments);
+      }
+    };
+  }
+
+  /**
+   * Restore original console methods
+   */
+  restoreConsole() {
+    console.log = this.originalConsoleLog;
+    console.info = this.originalConsoleInfo;
+    console.warn = this.originalConsoleWarn;
+    console.error = this.originalConsoleError;
   }
 
   /**
@@ -55,6 +120,11 @@ export class ProgressTracker {
     // Clear any existing interval first
     this.stopProgressUpdates();
     
+    this.isTrackingActive = true;
+    
+    // Add a blank line for separation
+    process.stdout.write('\n');
+    
     // Start a new interval
     this.updateInterval = setInterval(() => this.displayProgress(), intervalMs);
   }
@@ -67,15 +137,23 @@ export class ProgressTracker {
       clearInterval(this.updateInterval);
       this.updateInterval = null;
     }
+    
+    this.isTrackingActive = false;
+    this.restoreConsole();
+    
+    // Clear the current line to remove progress bar
+    process.stdout.write('\r\x1B[K');
   }
 
   /**
    * Display a progress bar showing upload status
    */
   displayProgress() {
+    if (!this.isTrackingActive) return;
+    
     const processed = this.completedFiles + this.failedFiles;
     const percentage = this.totalFiles > 0 ? Math.floor((processed / this.totalFiles) * 100) : 0;
-    const barWidth = 30;
+    const barWidth = 40;
     const completeWidth = Math.floor((percentage / 100) * barWidth);
     const bar = "█".repeat(completeWidth) + "░".repeat(barWidth - completeWidth);
     
@@ -93,11 +171,16 @@ export class ProgressTracker {
    * Display a summary of the upload results
    */
   displaySummary() {
+    // Ensure we've cleared the progress bar
+    if (this.isTrackingActive) {
+      this.stopProgressUpdates();
+    }
+    
     // Always show the final summary, regardless of verbosity
     if (this.failedFiles === 0) {
-      logger.always(chalk.green(`\nUpload completed successfully! All ${this.completedFiles} files uploaded.`));
+      logger.always(chalk.green(`Upload completed successfully! All ${this.completedFiles} files uploaded.`));
     } else {
-      logger.always(chalk.yellow(`\nUpload completed with issues: ${this.completedFiles} succeeded, ${this.failedFiles} failed.`));
+      logger.always(chalk.yellow(`Upload completed with issues: ${this.completedFiles} succeeded, ${this.failedFiles} failed.`));
     }
   }
 

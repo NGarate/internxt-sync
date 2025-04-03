@@ -13,7 +13,7 @@ export const Verbosity = {
   Verbose: 2 // All messages including per-file operations
 };
 
-// Maintain a log of recent messages to prevent duplicates
+// Set to track recent messages to avoid duplicates
 const recentMessages = new Set();
 const MAX_RECENT_MESSAGES = 10;
 const DUPLICATE_TIMEOUT = 1000; // 1 second
@@ -23,11 +23,9 @@ const DUPLICATE_TIMEOUT = 1000; // 1 second
  */
 function clearOldMessages() {
   if (recentMessages.size > MAX_RECENT_MESSAGES) {
-    // Clear all messages if we exceed the limit
     recentMessages.clear();
   }
   
-  // Clear all messages after a timeout
   setTimeout(() => {
     recentMessages.clear();
   }, DUPLICATE_TIMEOUT);
@@ -42,14 +40,18 @@ function clearOldMessages() {
  */
 export function log(message, level, currentVerbosity, allowDuplicates = true) {
   if (currentVerbosity >= level) {
-    // Check if this is a duplicate message
+    // Skip duplicate messages if not allowed
     if (!allowDuplicates && recentMessages.has(message)) {
       return;
     }
     
-    console.log(message);
+    // Add newline if needed and write to stdout
+    if (!message.endsWith('\n')) {
+      message += '\n';
+    }
+    process.stdout.write(message);
     
-    // Add to recent messages if not allowing duplicates
+    // Track message to prevent duplicates if needed
     if (!allowDuplicates) {
       recentMessages.add(message);
       clearOldMessages();
@@ -62,7 +64,9 @@ export function log(message, level, currentVerbosity, allowDuplicates = true) {
  * @param {string} message - The error message
  */
 export function error(message) {
-  console.error(chalk.red(message));
+  const formattedMessage = `❌ ${message}`;
+  const output = formattedMessage.endsWith('\n') ? formattedMessage : formattedMessage + '\n';
+  process.stderr.write(chalk.red(output));
 }
 
 /**
@@ -71,7 +75,8 @@ export function error(message) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function warning(message, currentVerbosity) {
-  log(chalk.yellow(message), Verbosity.Normal, currentVerbosity, false);
+  const formattedMessage = `⚠️ ${message}`;
+  log(chalk.yellow(formattedMessage), Verbosity.Normal, currentVerbosity, false);
 }
 
 /**
@@ -80,7 +85,8 @@ export function warning(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function info(message, currentVerbosity) {
-  log(chalk.blue(message), Verbosity.Normal, currentVerbosity, false);
+  const formattedMessage = `ℹ️  ${message}`;
+  log(chalk.blue(formattedMessage), Verbosity.Normal, currentVerbosity, false);
 }
 
 /**
@@ -89,7 +95,8 @@ export function info(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function success(message, currentVerbosity) {
-  log(chalk.green(message), Verbosity.Normal, currentVerbosity, true);
+  const formattedMessage = `✅ ${message}`;
+  log(chalk.green(formattedMessage), Verbosity.Normal, currentVerbosity, true);
 }
 
 /**
@@ -98,8 +105,6 @@ export function success(message, currentVerbosity) {
  * @param {number} currentVerbosity - The current verbosity setting
  */
 export function verbose(message, currentVerbosity) {
-  // For verbose messages, we always allow duplicates as they might contain
-  // different dynamic content but similar static content
   log(message, Verbosity.Verbose, currentVerbosity, true);
 }
 
@@ -108,5 +113,6 @@ export function verbose(message, currentVerbosity) {
  * @param {string} message - The message to show
  */
 export function always(message) {
-  console.log(message);
+  const output = message.endsWith('\n') ? message : message + '\n';
+  process.stdout.write(output);
 } 
