@@ -7,7 +7,6 @@ import * as inputUtils from './input-utils';
 import { Verbosity } from '../interfaces/logger';
 import * as readline from 'readline';
 import { safeModuleMock } from '../../test-config/bun-test-helpers';
-import { testWithMissingMethod } from '../../test-config/skip-if-bun-limitation';
 
 // Skip tests that try to mock readline since it's not possible in Bun
 const skipIfReadlineRequired = (description, fn) => {

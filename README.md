@@ -10,12 +10,13 @@ A high-performance command-line tool for synchronizing and uploading files to an
 - Directory structure preservation
 - Target directory specification
 - Cross-platform support (Windows, macOS, Linux)
+- Intelligent runtime detection for optimal performance with Bun or Node.js
 
 ## Requirements
 
 - Node.js 18.0.0+
 - A WebDAV server URL
-- (Optional) [Bun](https://bun.sh/) runtime for enhanced development experience
+- (Optional) [Bun](https://bun.sh/) runtime for enhanced development experience and performance
 
 ## Installation
 
@@ -74,6 +75,19 @@ webdav-backup /path/to/files --webdav-url=http://localhost:8080/webdav
 2. It uploads files that have changed since the last run
 3. Directory structures are created automatically on the WebDAV server
 4. Progress is displayed with a visual progress bar
+5. The tool automatically detects whether to use Bun or Node.js runtime based on your environment
+
+## Runtime Selection
+
+WebDAV Backup intelligently selects the optimal runtime:
+
+- If you execute with `bun webdav-backup`, it uses Bun's optimized pathways
+- If you execute with `node` or without specifying the runtime, it auto-detects based on:
+  - The presence of Bun in your environment
+  - The package manager used for installation (detects npm, yarn, pnpm, or bun lockfiles)
+  - Installation location patterns
+
+This ensures you get the best performance possible regardless of how you installed or run the tool.
 
 ## For Developers
 

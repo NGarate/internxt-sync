@@ -6,25 +6,23 @@
   "main": "dist/node/file-sync.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "webdav-backup": "bin-node.js"
+    "webdav-backup": "dist/bin.js"
   },
   "exports": {
     "import": {
       "bun": "./dist/bun/file-sync.js",
       "default": "./dist/node/file-sync.js"
-    },
-    "bin": {
-      "bun": "./bin-bun.js",
-      "default": "./bin-node.js"
     }
   },
   "scripts": {
-    "start": "node dist/node/file-sync.js",
-    "build": "npm run build:node && npm run build:bun",
+    "start": "bun run dist/node/file-sync.js",
+    "build": "bun run build:node && bun run build:bun && bun run build:bin && bun run postbuild",
     "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
     "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
-    "prepublishOnly": "npm run build",
-    "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
+    "build:bin": "bun build bin.ts --outdir dist --target bun --format esm",
+    "postbuild": "bun run --bun scripts/make-executable.ts",
+    "prepublishOnly": "bun run build",
+    "clean": "bun run --bun scripts/clean.ts",
     "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts",
     "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage"
   },
@@ -45,8 +43,7 @@
   },
   "files": [
     "dist/**",
-    "bin-bun.js",
-    "bin-node.js",
+    "bin.ts",
     "README.md",
     "LICENSE"
   ],
