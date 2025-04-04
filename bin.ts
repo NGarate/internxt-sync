@@ -1,164 +1,55 @@
 #!/usr/bin/env node
 
 /**
- * WebDAV File Sync CLI Universal Entry Point
+ * WebDAV Backup - Universal Entry Point
  * 
- * This TypeScript file is the source for both Bun and Node.js executables.
- * It detects and uses the appropriate runtime.
+ * This serves as the main executable for the WebDAV Backup tool.
+ * It automatically detects the runtime (Node.js or Bun) and uses the appropriate module.
  */
 
-import * as fs from 'fs';
 import * as path from 'path';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 
-// Native detection of Bun runtime
+// Get current file information for path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const ROOT_DIR = path.resolve(__dirname, '..');
+
+// Detect if running in Bun
 const isBun = typeof process !== 'undefined' && 
               // @ts-ignore - Bun specific global
               typeof Bun !== 'undefined';
 
-// Get __dirname equivalent in ESM
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// The parent directory of dist when running from dist/bin.js
-// This resolves to the project root
-const ROOT_DIR = path.resolve(__dirname, '..');
-
-// Imports that work in both Bun and Node
-let spawn = (command: string, args: string[], options: Record<string, any>): any => {
-  throw new Error('Child process module not available');
-};
-let execSync = (command: string, options: Record<string, any>): any => {
-  throw new Error('Child process module not available');
-};
-
-// Dynamically import child_process to avoid bundling issues with Bun
-try {
-  const childProcess = await import('child_process');
-  // @ts-ignore
-  spawn = childProcess.spawn;
-  // @ts-ignore
-  execSync = childProcess.execSync;
-} catch (e) {
-  console.error('Failed to import child_process module');
+// Log runtime information
+if (isBun) {
+  console.log("Using Bun runtime");
+} else {
+  console.log("Using Node.js runtime");
 }
 
-// Try to determine how this package was installed
-function detectInstallationMethod(): 'bun' | 'node' {
-  // If Bun is detected, just use Bun
-  if (isBun) {
-    return 'bun';
-  }
-  
-  try {
-    // Get the path to our package
-    const packagePath = ROOT_DIR;
-    
-    // Look for npm/yarn/pnpm lock files in parent directories
-    let currentDir = packagePath;
-    const maxLevels = 4; // Don't go too deep up the directory tree
-    
-    for (let i = 0; i < maxLevels; i++) {
-      // If we find a bun.lockb in a parent directory, it was probably installed with Bun
-      if (fs.existsSync(path.join(currentDir, 'bun.lockb'))) {
-        return 'bun';
-      }
-      
-      // If we find Node.js specific lockfiles, it was probably installed with npm/yarn/pnpm
-      if (
-        fs.existsSync(path.join(currentDir, 'package-lock.json')) || 
-        fs.existsSync(path.join(currentDir, 'yarn.lock')) ||
-        fs.existsSync(path.join(currentDir, 'pnpm-lock.yaml'))
-      ) {
-        return 'node';
-      }
-      
-      // Move up one directory
-      const parentDir = path.dirname(currentDir);
-      if (parentDir === currentDir) {
-        break; // We've reached the root
-      }
-      currentDir = parentDir;
-    }
-    
-    // If we're in a global installation and can't determine by lockfiles
-    // Check if it's in a directory that suggests which package manager was used
-    if (packagePath.includes('bun') || packagePath.includes('.bun')) {
-      return 'bun';
-    }
-    
-    // For global npm/yarn/pnpm installations
-    if (packagePath.includes('node_modules')) {
-      return 'node';
-    }
-    
-    // Default to checking if Bun exists in PATH
-    try {
-      execSync('bun --version', { stdio: 'ignore' });
-      return 'bun';
-    } catch (e) {
-      // Bun isn't available, default to Node
-      return 'node';
-    }
-  } catch (error) {
-    console.error('Error detecting installation method:', error);
-    // Default to Node if we can't determine
-    return 'node';
-  }
-}
+// Set global flag to indicate runtime
+// @ts-ignore
+globalThis.isBunRuntime = isBun;
 
+// Directly import the appropriate module based on runtime
 async function main() {
-  // If we're already running in Bun, just import the Bun entry point directly
-  if (isBun) {
-    console.log("Detected native Bun runtime");
-    const bunPath = path.join(ROOT_DIR, 'dist/bun/file-sync.js');
-    console.log(`Loading Bun entry point: ${bunPath}`);
-    await import(bunPath);
-    return;
-  }
-  
-  // Otherwise, determine which runtime to use
-  const runtime = detectInstallationMethod();
-
-  // Launch the appropriate runtime version
-  if (runtime === 'bun') {
-    console.log("Using Bun runtime (detected from installation method)");
-    
-    try {
-      // Spawn a Bun process to run the Bun-specific entry point
-      const bunEntryPoint = path.join(ROOT_DIR, 'dist/bun/file-sync.js');
-      console.log(`Loading Bun entry point: ${bunEntryPoint}`);
-      
-      const bunProcess = spawn('bun', [bunEntryPoint, ...process.argv.slice(2)], {
-        stdio: 'inherit',
-        cwd: process.cwd()
-      });
-      
-      // Handle process exit
-      bunProcess.on('exit', (code: number | null) => {
-        process.exit(code ?? 0);
-      });
-    } catch (error) {
-      console.error("Failed to run with Bun:", error);
-      console.log("Falling back to Node.js runtime");
-      // Fall back to Node.js if Bun execution fails
-      await loadNodeVersion();
-    }
-  } else {
-    console.log("Using Node.js runtime (detected from installation method)");
-    await loadNodeVersion();
-  }
-}
-
-// Function to load the Node.js version
-async function loadNodeVersion() {
   try {
-    // Dynamic import of the Node-specific bundle
-    const nodePath = path.join(ROOT_DIR, 'dist/node/file-sync.js');
-    console.log(`Loading Node.js entry point: ${nodePath}`);
-    await import(nodePath);
+    if (isBun) {
+      // Import the Bun-optimized version
+      const bunEntryPath = path.join(ROOT_DIR, 'dist/bun/file-sync.js');
+      console.log(`Loading Bun entry point: ${bunEntryPath}`);
+      await import(bunEntryPath);
+    } else {
+      // Import the Node.js version with proper URL conversion for cross-platform compatibility
+      const nodePath = path.join(ROOT_DIR, 'dist/node/file-sync.js');
+      console.log(`Loading Node.js entry point: ${nodePath}`);
+      
+      // Convert to file:// URL for Node.js ESM compatibility
+      const nodePathUrl = pathToFileURL(nodePath).href;
+      await import(nodePathUrl);
+    }
   } catch (error) {
-    console.error("Error loading Node.js version:", error);
+    console.error("Error importing entry point:", error);
     process.exit(1);
   }
 }

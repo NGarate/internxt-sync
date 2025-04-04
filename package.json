@@ -1,12 +1,12 @@
 {
   "name": "webdav-backup",
-  "version": "0.2.3",
-  "description": "WebDAV File Synchronization Tool. Securely uploads and manages files using WebDAVs.",
+  "version": "0.2.4",
+  "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "dist/node/file-sync.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "webdav-backup": "dist/bin.js"
+    "webdav-backup": "./dist/bin.js"
   },
   "exports": {
     "import": {
@@ -15,11 +15,12 @@
     }
   },
   "scripts": {
-    "start": "bun run dist/node/file-sync.js",
+    "start": "node dist/node/file-sync.js",
+    "start:bun": "bun dist/bun/file-sync.js",
     "build": "bun run build:node && bun run build:bun && bun run build:bin && bun run postbuild",
     "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
     "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
-    "build:bin": "bun build bin.ts --outdir dist --target bun --format esm",
+    "build:bin": "bun build bin.ts --outdir dist --target node --format esm",
     "postbuild": "bun run --bun scripts/make-executable.ts",
     "prepublishOnly": "bun run build",
     "clean": "bun run --bun scripts/clean.ts",
@@ -38,7 +39,6 @@
   "author": "ngarate",
   "license": "MIT",
   "engines": {
-    "bun": ">=1.0.0",
     "node": ">=18.0.0"
   },
   "files": [

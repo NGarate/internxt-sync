@@ -21,6 +21,11 @@ try {
     content = '#!/usr/bin/env node\n' + content;
     fs.writeFileSync(binPath, content);
     console.log('Added shebang line to bin.js');
+  } else if (content.startsWith('#!/usr/bin/env bun')) {
+    // Replace Bun shebang with Node shebang for wider compatibility
+    content = content.replace('#!/usr/bin/env bun', '#!/usr/bin/env node');
+    fs.writeFileSync(binPath, content);
+    console.log('Updated shebang line to use Node.js for wider compatibility');
   }
 
   // Make the file executable (chmod +x) on Unix-like systems
