@@ -14,8 +14,7 @@
     "build:bundle": "bun build src/main/file-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
     "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
     "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts",
-    "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage",
-    "fix-imports": "node scripts/remove-extensions.js"
+    "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage"
   },
   "keywords": [
     "webdav",
