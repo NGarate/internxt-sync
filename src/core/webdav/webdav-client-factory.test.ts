@@ -2,11 +2,11 @@
  * Tests for WebDAV Client Factory
  */
 
-import { expect, describe, it, beforeEach, afterEach, mock, spyOn } from 'bun:test';
+import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
 import { createWebDAVClient } from './webdav-client-factory';
 import * as logger from '../../utils/logger';
 import { Verbosity } from '../../interfaces/logger';
-import { mockLoggerFunctions, safeModuleMock } from '../../../test-config/bun-test-helpers';
+import { spyOn, createMockLoggers } from '../../../test-config/mocks/test-helpers';
 import * as webdav from 'webdav';
 
 // We don't need to explicitly mock the WebDAV client package
@@ -17,7 +17,7 @@ describe('WebDAV Client Factory', () => {
   
   beforeEach(() => {
     // Create mocks for logger functions
-    loggerMocks = mockLoggerFunctions(logger);
+    loggerMocks = createMockLoggers();
     
     // Mock the webdav.createClient function
     spyOn(webdav, 'createClient').mockImplementation((url, options) => {

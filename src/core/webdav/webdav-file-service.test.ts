@@ -6,7 +6,7 @@ import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
 import { WebDAVFileService } from './webdav-file-service';
 import { Verbosity } from '../../utils/logger';
 import * as logger from '../../utils/logger';
-import { mockLoggerFunctions, safeModuleMock } from '../../../test-config/bun-test-helpers';
+import { createMockLoggers, spyOn } from '../../../test-config/mocks/test-helpers';
 import * as fs from 'fs';
 
 // Mock WebDAV client
@@ -60,7 +60,7 @@ describe('WebDAV File Service', () => {
   
   beforeEach(() => {
     // Mock logger
-    loggerMocks = mockLoggerFunctions(logger);
+    loggerMocks = createMockLoggers();
     
     // Create WebDAV client stub
     mockClient = new WebDAVClientStub();
@@ -70,8 +70,8 @@ describe('WebDAV File Service', () => {
     originalStat = fs.promises.stat;
     
     // Mock fs.promises methods
-    safeModuleMock(fs.promises, 'readFile', mock(async () => Buffer.from('test file content')));
-    safeModuleMock(fs.promises, 'stat', mock(async () => ({ size: 1024 })));
+    spyOn(fs.promises, 'readFile').mockImplementation(async () => Buffer.from('test file content'));
+    spyOn(fs.promises, 'stat').mockImplementation(async () => ({ size: 1024 }));
     
     // Create service
     fileService = new WebDAVFileService(mockClient);
@@ -156,9 +156,9 @@ describe('WebDAV File Service', () => {
     
     it('should handle file read errors gracefully', async () => {
       // Configure fs to throw an error
-      safeModuleMock(fs.promises, 'readFile', mock(async () => {
+      spyOn(fs.promises, 'readFile').mockImplementation(async () => {
         throw new Error('File read error');
-      }));
+      });
       
       const result = await fileService.uploadFile('localFile.txt', '/remote/file.txt');
       

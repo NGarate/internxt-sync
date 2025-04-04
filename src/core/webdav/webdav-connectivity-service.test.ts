@@ -6,7 +6,7 @@ import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
 import { WebDAVConnectivityService } from './webdav-connectivity-service';
 import { Verbosity } from '../../utils/logger';
 import * as logger from '../../utils/logger';
-import { mockLoggerFunctions } from '../../../test-config/bun-test-helpers';
+import { createMockLoggers } from '../../../test-config/mocks/test-helpers';
 
 // Mock WebDAV client
 class WebDAVClientStub {
@@ -108,7 +108,7 @@ describe('WebDAV Connectivity Service', () => {
   
   beforeEach(() => {
     // Create spies for logger functions
-    loggerMocks = mockLoggerFunctions(logger);
+    loggerMocks = createMockLoggers();
     
     mockClient = new WebDAVClientStub();
     connectivityService = new WebDAVConnectivityService(mockClient);

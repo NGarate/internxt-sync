@@ -5,11 +5,11 @@
  * when uploading multiple files in the same directories.
  */
 
-import { expect, describe, beforeEach, spyOn, mock } from 'bun:test';
+import { expect, describe, beforeEach, mock } from 'bun:test';
 import Uploader from './uploader';
 import { Verbosity } from '../../interfaces/logger';
 import * as logger from '../../utils/logger';
-import { skipIfSpyingIssues, createMockWebDAVService, createMockFileInfo } from '../../../test-config/mocks/bun-helpers';
+import { skipIfSpyingIssues, createMockWebDAVService, createMockFileInfo, spyOn } from '../../../test-config/mocks/test-helpers';
 
 describe('Directory Creation Optimization', () => {
   // Test data

@@ -1,74 +1,61 @@
 # Test Configuration
 
-This directory contains configuration files and utilities for testing the WebDAV Backup Tool.
+This directory contains utilities and configuration for testing the WebDAV Backup tool.
 
-## Structure
+## Overview
 
-- `bun-test-loader.ts` - Configuration for Bun test loader to handle imports and module loading
-- `module-mapper.ts` - Maps external dependencies to mock implementations for testing
-- `setup.ts` - Setup file for test environment
-- `test-utils.ts` - Utility functions for test helpers, mocks, and spies
-- `tsconfig.test.json` - TypeScript configuration for tests
-- `integration.test.ts` - Documentation for integration tests (not implemented)
+The testing setup has been simplified to leverage Bun's native TypeScript and testing capabilities. The structure is:
 
-### Mocks Directory
+- `mocks/` - Contains mock implementations for testing
+  - `test-helpers.ts` - Consolidated test helpers with mocks and utilities
+  - Other specific mocks for components like event emitters, etc.
+- `setup.ts` - Main entry point that re-exports all test helpers
 
-The `mocks` directory contains mock implementations for external dependencies:
+## Using Test Helpers
 
-- `chalk-mock.ts` - Mock implementation for chalk (terminal colors)
-- `event-emitter-mock.ts` - Mock implementation for EventEmitter
-- `function-mock.ts` - Mock implementations for function utilities
-- `promise-mock.ts` - Mock implementations for Promise utilities
-- `webdav-mock.ts` - Mock implementation for WebDAV client
+Import test utilities directly from the consolidated helpers file:
 
-## Usage
+```typescript
+import { 
+  skipIfSpyingIssues, 
+  createMockWebDAVService, 
+  spyOn 
+} from '../../test-config/mocks/test-helpers';
 
-### Running Tests
+// Or import everything
+import * as testHelpers from '../../test-config/mocks/test-helpers';
+```
 
-Tests are run using the Bun test runner. Test files should be co-located with their implementation files.
+## Key Helper Functions
+
+- `skipIfSpyingIssues(name, fn)` - Skip tests that encounter Bun's accessor property spying limitations
+- `spyOn(object, method)` - Enhanced spy function that handles accessor properties
+- `createMockWebDAVService()` - Create a standard WebDAV service mock
+- `createMockFileScanner()` - Create a mock file scanner
+- `createMockFileInfo()` - Create mock file info objects
+- `createMockFs()` - Create a mock filesystem
+- `createMockReadline()` - Create a mock readline interface
+- `mockProcessOutput()` - Mock process.stdout and process.stderr
+
+## Running Tests
+
+Run tests using Bun's native test runner:
 
 ```bash
 # Run all tests
 bun test
 
-# Run tests in a specific file
-bun test src/core/webdav/webdav-service.test.ts
+# Run specific test file
+bun test src/path/to/test.ts
 
-# Run tests in watch mode
-bun test --watch
+# Run tests with pattern matching
+bun test --pattern "upload"
 ```
 
-### Adding New Tests
+## Test Environment
 
-When adding new tests:
+Bun natively supports TypeScript in tests without additional configuration. The environment is set up to:
 
-1. Create a test file next to the implementation file with a `.test.ts` extension
-2. Import test utilities from `test-config/test-utils`
-3. Use the mock implementations from `test-config/mocks/*` as needed
-
-### Example Test
-
-```typescript
-import { expect, describe, it, beforeEach } from 'bun:test';
-import { spyOn, createMockFs } from '../../test-config/test-utils';
-import * as logger from '../../utils/logger';
-import { MyClass } from './my-class';
-
-describe('MyClass', () => {
-  let myClass;
-  let mockFs;
-  let verboseSpy;
-
-  beforeEach(() => {
-    mockFs = createMockFs();
-    verboseSpy = spyOn(logger, 'verbose');
-    myClass = new MyClass(mockFs);
-  });
-
-  it('should do something', () => {
-    const result = myClass.doSomething();
-    expect(result).toBe(true);
-    expect(verboseSpy).toHaveBeenCalled();
-  });
-});
-``` 
+1. Handle mocking of common components
+2. Provide utilities for common testing scenarios
+3. Work around Bun's current limitations with certain types of mocking 

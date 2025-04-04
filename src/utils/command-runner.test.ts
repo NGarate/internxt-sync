@@ -2,12 +2,12 @@
  * Tests for Command Runner
  */
 
-import { expect, describe, it, beforeEach, afterEach, mock, spyOn } from 'bun:test';
+import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
 import * as commandRunner from './command-runner';
 import * as childProcess from 'child_process';
 import * as logger from './logger';
 import { Verbosity } from '../interfaces/logger';
-import { mockLoggerFunctions } from '../../test-config/bun-test-helpers';
+import { createMockLoggers, spyOn } from '../../test-config/mocks/test-helpers';
 
 // Create a mock process for testing
 function createMockProcess() {
@@ -76,7 +76,7 @@ describe('Command Runner', () => {
   
   beforeEach(() => {
     // Mock logger
-    loggerMocks = mockLoggerFunctions(logger);
+    loggerMocks = createMockLoggers();
     
     // Create a mockProcess that we'll return from the spy
     const mockProc = createMockProcess();

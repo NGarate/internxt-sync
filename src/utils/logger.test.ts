@@ -5,7 +5,7 @@
 import { expect, describe, it, beforeEach, afterEach } from 'bun:test';
 import * as logger from './logger';
 import { Verbosity } from '../interfaces/logger';
-import { skipIfSpyingIssues } from '../../test-config/mocks/bun-helpers';
+import { skipIfSpyingIssues } from '../../test-config/mocks/test-helpers';
 
 describe('Logger Utilities', () => {
   let originalStdout;

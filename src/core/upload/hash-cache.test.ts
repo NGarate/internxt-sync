@@ -2,14 +2,14 @@
  * Tests for Hash Cache
  */
 
-import { expect, describe, it, beforeEach, afterEach, mock, spyOn } from 'bun:test';
+import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
 import { HashCache } from './hash-cache';
 import { Verbosity } from '../../interfaces/logger';
 import * as logger from '../../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { mockLoggerFunctions, safeModuleMock } from '../../../test-config/bun-test-helpers';
+import { spyOn, createMockLoggers } from '../../../test-config/mocks/test-helpers';
 
 describe('HashCache', () => {
   // Mocks
@@ -21,7 +21,7 @@ describe('HashCache', () => {
   
   beforeEach(() => {
     // Create spies for logging
-    loggerMocks = mockLoggerFunctions(logger);
+    loggerMocks = createMockLoggers();
     
     // Mock fs existsSync
     spyOn(fs, 'existsSync').mockImplementation(() => true);
