@@ -1,7 +1,7 @@
 import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
- * Environment utilities for the Internxt WebDAV Uploader
- * Handles runtime detection and system information
+ * Environment utilities for the WebDAV Backup Tool
+ * Handles detecting runtime environment and system capabilities
  */
 
 import os from 'os';

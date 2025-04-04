@@ -1,6 +1,6 @@
 import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
- * File system utilities for the Internxt WebDAV Uploader
+ * File system utilities for the WebDAV Backup Tool
  * Handles file operations, checksums, and path manipulations
  */
 

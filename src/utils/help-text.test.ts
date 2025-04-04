@@ -37,8 +37,8 @@ describe('Help Text Utilities', () => {
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
       // Check for Bun-specific content
-      expect(capturedHelpText).toContain('bun webdav-sync.ts');
-      expect(capturedHelpText).not.toContain('node webdav-sync.js');
+      expect(capturedHelpText).toContain('bun webdav-backup.ts');
+      expect(capturedHelpText).not.toContain('node webdav-backup.js');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -69,8 +69,8 @@ describe('Help Text Utilities', () => {
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
       // Check for Node-specific content
-      expect(capturedHelpText).toContain('node webdav-sync.js');
-      expect(capturedHelpText).not.toContain('bun webdav-sync.ts');
+      expect(capturedHelpText).toContain('node webdav-backup.js');
+      expect(capturedHelpText).not.toContain('bun webdav-backup.ts');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -96,8 +96,8 @@ describe('Help Text Utilities', () => {
       const helpTextContent = helpText.getHelpText();
       
       // Check for Bun-specific content
-      expect(helpTextContent).toContain('bun webdav-sync.ts');
-      expect(helpTextContent).not.toContain('node webdav-sync.js');
+      expect(helpTextContent).toContain('bun webdav-backup.ts');
+      expect(helpTextContent).not.toContain('node webdav-backup.js');
       
       // Check for essential help sections
       expect(helpTextContent).toContain('Usage:');
@@ -120,8 +120,8 @@ describe('Help Text Utilities', () => {
       const helpTextContent = helpText.getHelpText();
       
       // Check for Node-specific content
-      expect(helpTextContent).toContain('node webdav-sync.js');
-      expect(helpTextContent).not.toContain('bun webdav-sync.ts');
+      expect(helpTextContent).toContain('node webdav-backup.js');
+      expect(helpTextContent).not.toContain('bun webdav-backup.ts');
       
       // Check for essential help sections
       expect(helpTextContent).toContain('Usage:');

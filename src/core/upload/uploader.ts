@@ -33,7 +33,7 @@ export default class Uploader {
     // Initialize services
     this.webdavService = new WebDAVService(webdavUrl, verbosity);
     this.hashCache = new HashCache(
-      path.join(os.tmpdir(), 'internxt-hash-cache.json'),
+      path.join(os.tmpdir(), 'webdav-backup-hash-cache.json'),
       verbosity
     );
     this.progressTracker = new ProgressTracker(verbosity);

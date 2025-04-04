@@ -17,7 +17,7 @@ export function showHelp() {
   const runtime = isBunEnvironment() ? 'bun' : 'node';
   
   logger.always(`
-Usage: ${runtime} webdav-sync${scriptExt} <source-dir> [options]
+Usage: ${runtime} webdav-backup${scriptExt} <source-dir> [options]
 
 Options:
   --cores=<number>   Number of concurrent uploads (default: 2/3 of CPU cores)
@@ -29,11 +29,11 @@ Options:
   --help             Show this help message
 
 Examples:
-  ${runtime} webdav-sync${scriptExt} /path/to/files --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --cores=4 --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --quiet --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --force --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --cores=4 --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --quiet --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --force --webdav-url=https://example.com/webdav
   `);
 }
 
@@ -46,7 +46,7 @@ export function getHelpText() {
   const runtime = isBunEnvironment() ? 'bun' : 'node';
   
   return `
-Usage: ${runtime} webdav-sync${scriptExt} <source-dir> [options]
+Usage: ${runtime} webdav-backup${scriptExt} <source-dir> [options]
 
 Options:
   --cores=<number>   Number of concurrent uploads (default: 2/3 of CPU cores)
@@ -58,10 +58,10 @@ Options:
   --help             Show this help message
 
 Examples:
-  ${runtime} webdav-sync${scriptExt} /path/to/files --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --cores=4 --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --quiet --webdav-url=https://example.com/webdav
-  ${runtime} webdav-sync${scriptExt} /path/to/files --force --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --cores=4 --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --quiet --webdav-url=https://example.com/webdav
+  ${runtime} webdav-backup${scriptExt} /path/to/files --force --webdav-url=https://example.com/webdav
   `;
 } 

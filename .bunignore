@@ -26,4 +26,9 @@ Thumbs.db
 .idea/
 coverage/
 .nyc_output/
-.internxt-upload-state.json 
+.webdav-backup-state.json
+
+# npm ignores
+node_modules/
+.npm/
+npm-debug.log 

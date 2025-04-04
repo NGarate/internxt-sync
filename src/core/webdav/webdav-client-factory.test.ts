@@ -65,8 +65,8 @@ describe('WebDAV Client Factory', () => {
     expect(typeof client.createDirectory).toBe('function');
     
     // Verify default options were applied
-    expect(client.config.username).toBe('internxt');
-    expect(client.config.password).toBe('internxt');
+    expect(client.config.username).toBe('webdav');
+    expect(client.config.password).toBe('password');
   });
   
   it.skip('should log verbose information when creating a client - skipped due to Bun limitations', () => {

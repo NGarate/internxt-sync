@@ -1,4 +1,4 @@
-# WebDAV File Sync
+# WebDAV Backup
 
 A high-performance command-line tool for synchronizing and uploading files to any WebDAV server, optimized for Node.js with enhanced performance when using Bun.
 
@@ -23,21 +23,21 @@ A high-performance command-line tool for synchronizing and uploading files to an
 
 ```bash
 # Install globally with npm
-npm install -g webdav-file-sync
+npm install -g webdav-backup
 ```
 
 ### Alternative: Install with Bun
 
 ```bash
 # Install globally with Bun (for Bun users)
-bun install -g webdav-file-sync
+bun install -g webdav-backup
 ```
 
 ## Usage
 
 ```bash
 # Basic usage
-webdav-sync <source-dir> --webdav-url=<url> [options]
+webdav-backup <source-dir> --webdav-url=<url> [options]
 ```
 
 ### Options
@@ -53,19 +53,19 @@ webdav-sync <source-dir> --webdav-url=<url> [options]
 
 ```bash
 # Upload files to a WebDAV server
-webdav-sync /path/to/files --webdav-url=https://example.com/webdav
+webdav-backup /path/to/files --webdav-url=https://example.com/webdav
 
 # Upload files with 4 concurrent uploads
-webdav-sync /path/to/files --cores=4 --webdav-url=https://example.com/webdav
+webdav-backup /path/to/files --cores=4 --webdav-url=https://example.com/webdav
 
 # Upload files to a specific target directory
-webdav-sync /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
+webdav-backup /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
 
 # Upload with minimal output
-webdav-sync /path/to/files --quiet --webdav-url=https://example.com/webdav
+webdav-backup /path/to/files --quiet --webdav-url=https://example.com/webdav
 
 # Upload to a local WebDAV server
-webdav-sync /path/to/files --webdav-url=http://localhost:8080/webdav
+webdav-backup /path/to/files --webdav-url=http://localhost:8080/webdav
 ```
 
 ## How It Works
@@ -81,8 +81,8 @@ If you want to contribute to the project or use it for development:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/webdav-file-sync.git
-cd webdav-file-sync
+git clone https://github.com/yourusername/webdav-backup.git
+cd webdav-backup
 
 # Install dependencies with Bun (recommended for development)
 bun install

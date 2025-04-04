@@ -4,7 +4,7 @@
  * WebDAV File Sync CLI Wrapper
  * 
  * This provides a simple command-line interface for the WebDAV File Synchronization Tool.
- * Users simply need to install this package globally and run 'webdav-sync'.
+ * Users simply need to install this package globally and run 'webdav-backup'.
  */
 
 // Pre-load external dependencies to ensure they're available

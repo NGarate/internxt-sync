@@ -1,6 +1,6 @@
 # Test Configuration
 
-This directory contains configuration files and utilities for testing the Internxt WebDAV Uploader.
+This directory contains configuration files and utilities for testing the WebDAV Backup Tool.
 
 ## Structure
 

@@ -1,6 +1,6 @@
 /**
- * Logger utility for the Internxt WebDAV Uploader
- * Handles console output with color formatting and verbosity levels
+ * Logger utility for the WebDAV Backup Tool
+ * Handles logging operations with different verbosity levels
  */
 
 import { Verbosity, LogLevel } from '../interfaces/logger';

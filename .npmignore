@@ -15,6 +15,12 @@
 /bun-test-loader.ts
 /buntest.config.ts
 bun-test-*
+test/
+*.test.ts
+tests/
+__tests__/
+coverage/
+.webdav-backup-state.json
 
 # Development files
 .git/
@@ -49,9 +55,7 @@ logs
 Thumbs.db
 .cache/
 .idea/
-coverage/
 .nyc_output/
-.internxt-upload-state.json
 
 # Bun specific files to exclude from publish
 bun.lockb

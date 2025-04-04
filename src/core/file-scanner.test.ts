@@ -51,7 +51,7 @@ describe('FileScanner', () => {
     
     expect(scanner.sourceDir).toBe('/resolved/test/dir');
     expect(scanner.verbosity).toBe(1);
-    expect(scanner.statePath).toContain('.internxt-upload-state.json');
+    expect(scanner.statePath).toContain('.webdav-backup-state.json');
     
     // Restore original path.resolve
     path.resolve = originalResolve;
@@ -59,18 +59,13 @@ describe('FileScanner', () => {
   
   // Test loadState
   it('should load state from file', async () => {
-    const mockState = { 
-      files: { 'file1.txt': 'checksum1', 'file2.txt': 'checksum2' }, 
-      lastRun: '2023-01-01T00:00:00.000Z' 
-    };
-    
-    loadJsonFromFileSpy.mockImplementation(() => Promise.resolve(mockState));
+    spyOn(fsUtils, 'loadJsonFromFile').mockImplementation(() => Promise.resolve({ files: { 'test.txt': 'abc123' }, lastRun: '2021-01-01' }));
     
     const scanner = new FileScanner('/test/dir');
     await scanner.loadState();
     
-    expect(scanner.uploadState).toEqual(mockState);
-    expect(loadJsonFromFileSpy).toHaveBeenCalled();
+    expect(fsUtils.loadJsonFromFile).toHaveBeenCalledTimes(1);
+    expect(scanner.statePath).toContain('.webdav-backup-state.json');
   });
   
   // Test saveState

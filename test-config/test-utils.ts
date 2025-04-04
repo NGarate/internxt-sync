@@ -1,8 +1,6 @@
 /**
- * Test Utilities for Bun and Node.js Tests
- * 
- * This file provides utility functions to help with mocking and testing
- * for the Internxt WebDAV Uploader project.
+ * Test utilities and helper functions 
+ * for the WebDAV Backup Tool.
  */
 
 import { spyOn as bunSpyOn, mock } from 'bun:test';

@@ -1,4 +1,4 @@
-# Bun Configuration for Internxt Sync
+# Bun Configuration for WebDAV Backup
 
 # Dev dependencies
 dev = ["typescript", "@types/node"]
@@ -69,7 +69,7 @@ lockfile = "text"
 
 # Define scopes and registries
 [[scopes]]
-name = "webdav-sync"
+name = "webdav-backup"
 registry = "https://registry.npmjs.org/"
 
 # Run configuration

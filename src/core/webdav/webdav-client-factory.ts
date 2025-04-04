@@ -14,8 +14,8 @@ import { createClient } from 'webdav';
  */
 export function createWebDAVClient(webdavUrl, options = {}) {
   const defaultOptions = {
-    username: 'internxt',
-    password: 'internxt'
+    username: 'webdav',
+    password: 'password'
   };
   
   const clientOptions = { ...defaultOptions, ...options };
