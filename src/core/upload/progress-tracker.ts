@@ -34,6 +34,9 @@ export class ProgressTracker {
     
     // Store whether we've drawn the progress bar yet
     this.hasDrawnProgressBar = false;
+    
+    // Track if we're currently in an override function to prevent recursive calls
+    this.inOverrideFunction = false;
   }
 
   /**
@@ -46,6 +49,7 @@ export class ProgressTracker {
     this.failedFiles = 0;
     this.lastMessageTime = 0;
     this.hasDrawnProgressBar = false;
+    this.inOverrideFunction = false;
     this.setupConsoleOverrides();
   }
 
@@ -60,114 +64,55 @@ export class ProgressTracker {
       process.stdout.write('\x1B[1A\x1B[K');
     };
     
+    // Create a common handler for all console methods
+    const createOverride = (originalMethod) => {
+      return function() {
+        // Prevent recursive calls if we're already inside an override
+        if (self.inOverrideFunction) {
+          return originalMethod.apply(console, arguments);
+        }
+        
+        self.inOverrideFunction = true;
+        
+        try {
+          if (self.isTrackingActive) {
+            // If we've shown a progress bar, clear it
+            if (self.hasDrawnProgressBar) {
+              // Clear the line with progress bar
+              process.stdout.write('\r\x1B[K');
+            }
+            
+            // Print the message
+            originalMethod.apply(console, arguments);
+            
+            // Ensure the message ends with a newline
+            const lastArg = arguments[arguments.length - 1];
+            if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
+              process.stdout.write('\n');
+            }
+            
+            // Record when this message was shown
+            self.lastMessageTime = Date.now();
+            
+            // Redraw progress bar on a new line if enough time has passed
+            const now = Date.now();
+            if (now - self.lastMessageTime > 100) {
+              process.nextTick(() => self.displayProgress());
+            }
+          } else {
+            originalMethod.apply(console, arguments);
+          }
+        } finally {
+          self.inOverrideFunction = false;
+        }
+      };
+    };
+    
     // Override console methods to preserve progress bar
-    console.log = function() {
-      if (self.isTrackingActive) {
-        // If we've shown a progress bar, clear it
-        if (self.hasDrawnProgressBar) {
-          // Clear the line with progress bar
-          process.stdout.write('\r\x1B[K');
-        }
-        
-        // Print the log message
-        self.originalConsoleLog.apply(console, arguments);
-        
-        // Ensure the message ends with a newline
-        const lastArg = arguments[arguments.length - 1];
-        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
-          process.stdout.write('\n');
-        }
-        
-        // Record when this message was shown
-        self.lastMessageTime = Date.now();
-        
-        // Redraw progress bar on a new line
-        process.nextTick(() => self.displayProgress());
-      } else {
-        self.originalConsoleLog.apply(console, arguments);
-      }
-    };
-    
-    console.info = function() {
-      if (self.isTrackingActive) {
-        // If we've shown a progress bar, clear it
-        if (self.hasDrawnProgressBar) {
-          // Clear the line with progress bar
-          process.stdout.write('\r\x1B[K');
-        }
-        
-        // Print the info message
-        self.originalConsoleInfo.apply(console, arguments);
-        
-        // Ensure the message ends with a newline
-        const lastArg = arguments[arguments.length - 1];
-        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
-          process.stdout.write('\n');
-        }
-        
-        // Record when this message was shown
-        self.lastMessageTime = Date.now();
-        
-        // Redraw progress bar on a new line
-        process.nextTick(() => self.displayProgress());
-      } else {
-        self.originalConsoleInfo.apply(console, arguments);
-      }
-    };
-    
-    console.warn = function() {
-      if (self.isTrackingActive) {
-        // If we've shown a progress bar, clear it
-        if (self.hasDrawnProgressBar) {
-          // Clear the line with progress bar
-          process.stdout.write('\r\x1B[K');
-        }
-        
-        // Print the warning message
-        self.originalConsoleWarn.apply(console, arguments);
-        
-        // Ensure the message ends with a newline
-        const lastArg = arguments[arguments.length - 1];
-        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
-          process.stdout.write('\n');
-        }
-        
-        // Record when this message was shown
-        self.lastMessageTime = Date.now();
-        
-        // Redraw progress bar on a new line
-        process.nextTick(() => self.displayProgress());
-      } else {
-        self.originalConsoleWarn.apply(console, arguments);
-      }
-    };
-    
-    console.error = function() {
-      if (self.isTrackingActive) {
-        // If we've shown a progress bar, clear it
-        if (self.hasDrawnProgressBar) {
-          // Clear the line with progress bar
-          process.stdout.write('\r\x1B[K');
-        }
-        
-        // Print the error message
-        self.originalConsoleError.apply(console, arguments);
-        
-        // Ensure the message ends with a newline
-        const lastArg = arguments[arguments.length - 1];
-        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
-          process.stdout.write('\n');
-        }
-        
-        // Record when this message was shown
-        self.lastMessageTime = Date.now();
-        
-        // Redraw progress bar on a new line
-        process.nextTick(() => self.displayProgress());
-      } else {
-        self.originalConsoleError.apply(console, arguments);
-      }
-    };
+    console.log = createOverride(this.originalConsoleLog);
+    console.info = createOverride(this.originalConsoleInfo);
+    console.warn = createOverride(this.originalConsoleWarn);
+    console.error = createOverride(this.originalConsoleError);
   }
 
   /**

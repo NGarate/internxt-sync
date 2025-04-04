@@ -50,6 +50,12 @@ export default class Uploader {
     this.fileScanner = null;
     // Track successfully uploaded files to avoid duplicate messages
     this.uploadedFiles = new Set();
+    
+    // Store normalized path info for all files
+    this.normalizedPaths = new Map();
+    
+    // Track directories that have already been created in this session
+    this.createdDirectories = new Set();
   }
 
   /**
@@ -59,6 +65,32 @@ export default class Uploader {
   setFileScanner(scanner) {
     this.fileScanner = scanner;
     logger.verbose('File scanner set', this.verbosity);
+  }
+
+  /**
+   * Create directory structure if needed and track which directories have been created
+   * @param {string} directory - Directory to create
+   * @returns {Promise<boolean>} True if successful
+   */
+  async ensureDirectoryExists(directory) {
+    // Skip if no directory or empty
+    if (!directory) return true;
+    
+    // Skip if we've already created this directory in this session
+    if (this.createdDirectories.has(directory)) {
+      logger.verbose(`Directory already created in this session: ${directory}`, this.verbosity);
+      return true;
+    }
+    
+    // Create the directory structure
+    const result = await this.webdavService.createDirectoryStructure(directory);
+    
+    // If successful, add to our tracking set
+    if (result) {
+      this.createdDirectories.add(directory);
+    }
+    
+    return result;
   }
 
   /**
@@ -96,33 +128,50 @@ export default class Uploader {
       
       // Create target directory if it doesn't exist
       if (this.targetDir) {
-        await this.webdavService.createDirectoryStructure(this.targetDir);
+        await this.ensureDirectoryExists(this.targetDir);
       }
 
-      // Normalize the relative path to use forward slashes
-      const normalizedRelativePath = fileInfo.relativePath.replace(/\\/g, '/');
+      // Get or create normalized path info
+      let pathInfo = this.normalizedPaths.get(fileInfo.relativePath);
       
-      // Extract directory from the relative path
-      const lastSlashIndex = normalizedRelativePath.lastIndexOf('/');
-      if (lastSlashIndex > 0) {
-        const directory = normalizedRelativePath.substring(0, lastSlashIndex);
-        logger.verbose(`Ensuring directory structure exists for file: ${directory}`, this.verbosity);
+      if (!pathInfo) {
+        // Normalize the relative path to use forward slashes
+        const normalizedPath = fileInfo.relativePath.replace(/\\/g, '/');
         
-        // Create the directory structure for the file
-        const fullDirectoryPath = this.targetDir
-          ? `${this.targetDir}/${directory}`
-          : directory;
+        // Extract directory from the relative path
+        const lastSlashIndex = normalizedPath.lastIndexOf('/');
+        const directory = lastSlashIndex > 0 ? normalizedPath.substring(0, lastSlashIndex) : '';
+        
+        // Construct the target path
+        const targetPath = this.targetDir 
+          ? `${this.targetDir}/${normalizedPath}` 
+          : normalizedPath;
+        
+        // Create full directory path
+        const fullDirectoryPath = directory 
+          ? (this.targetDir ? `${this.targetDir}/${directory}` : directory)
+          : this.targetDir;
           
-        await this.webdavService.createDirectoryStructure(fullDirectoryPath);
+        // Store all the path info to avoid recalculating
+        pathInfo = {
+          normalizedPath,
+          directory,
+          targetPath,
+          fullDirectoryPath
+        };
+        
+        // Cache the normalized path info
+        this.normalizedPaths.set(fileInfo.relativePath, pathInfo);
+      }
+      
+      // Create directory structure if needed
+      if (pathInfo.directory) {
+        logger.verbose(`Ensuring directory structure exists for file: ${pathInfo.directory}`, this.verbosity);
+        await this.ensureDirectoryExists(pathInfo.fullDirectoryPath);
       }
 
-      // Construct the target path
-      const targetPath = this.targetDir 
-        ? `${this.targetDir}/${normalizedRelativePath}` 
-        : normalizedRelativePath;
-      
       // Upload the file
-      const result = await this.webdavService.uploadFile(fileInfo.absolutePath, targetPath);
+      const result = await this.webdavService.uploadFile(fileInfo.absolutePath, pathInfo.targetPath);
       
       if (result.success) {
         // Track that we've uploaded this file to avoid duplicate messages
@@ -167,12 +216,64 @@ export default class Uploader {
     
     // Create the target directory structure if needed
     if (this.targetDir) {
-      await this.webdavService.createDirectoryStructure(this.targetDir);
+      await this.ensureDirectoryExists(this.targetDir);
     }
     
     if (filesToUpload.length === 0) {
       logger.success("All files are up to date.", this.verbosity);
       return;
+    }
+    
+    // Reset tracking sets for new upload session
+    this.uploadedFiles.clear();
+    this.createdDirectories.clear();
+
+    // Extract and pre-create all unique directories
+    if (filesToUpload.length > 1) {
+      const uniqueDirectories = new Set();
+      
+      // Analyze files and collect unique directories
+      for (const fileInfo of filesToUpload) {
+        let pathInfo = this.normalizedPaths.get(fileInfo.relativePath);
+        
+        if (!pathInfo) {
+          // Normalize the relative path
+          const normalizedPath = fileInfo.relativePath.replace(/\\/g, '/');
+          
+          // Extract directory from the relative path
+          const lastSlashIndex = normalizedPath.lastIndexOf('/');
+          const directory = lastSlashIndex > 0 ? normalizedPath.substring(0, lastSlashIndex) : '';
+          
+          // Create full directory path
+          const fullDirectoryPath = directory 
+            ? (this.targetDir ? `${this.targetDir}/${directory}` : directory)
+            : this.targetDir;
+            
+          if (directory) {
+            uniqueDirectories.add(fullDirectoryPath);
+          }
+          
+          // Store all the path info to avoid recalculating
+          pathInfo = {
+            normalizedPath,
+            directory,
+            targetPath: this.targetDir ? `${this.targetDir}/${normalizedPath}` : normalizedPath,
+            fullDirectoryPath
+          };
+          
+          // Cache the normalized path info
+          this.normalizedPaths.set(fileInfo.relativePath, pathInfo);
+        } else if (pathInfo.directory) {
+          uniqueDirectories.add(pathInfo.fullDirectoryPath);
+        }
+      }
+      
+      // Create all unique directories first
+      logger.verbose(`Pre-creating ${uniqueDirectories.size} unique directories...`, this.verbosity);
+      const directories = Array.from(uniqueDirectories);
+      for (const dir of directories) {
+        await this.ensureDirectoryExists(dir);
+      }
     }
 
     // Show starting message before initializing progress tracker

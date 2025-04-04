@@ -77,18 +77,13 @@ async function main() {
     }
   } catch (error) {
     logger.error(`Fatal error: ${error.message}`);
-    console.error(error);
     process.exit(1);
   }
 }
 
 // Check if this module is being run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
-  main().catch((error) => {
-    logger.error(`Fatal error: ${error.message}`);
-    console.error(error);
-    process.exit(1);
-  });
+  main();
 }
 
 export default main; 
