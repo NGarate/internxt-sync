@@ -3,15 +3,27 @@
   "version": "0.2.1",
   "description": "WebDAV File Synchronization Tool. Securely uploads and manages files using WebDAVs.",
   "type": "module",
-  "main": "dist/file-sync.js",
+  "main": "dist/node/file-sync.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "webdav-backup": "dist/bin.js"
+    "webdav-backup": "bin-node.js"
+  },
+  "exports": {
+    "import": {
+      "bun": "./dist/bun/file-sync.js",
+      "default": "./dist/node/file-sync.js"
+    },
+    "bin": {
+      "bun": "./bin-bun.js",
+      "default": "./bin-node.js"
+    }
   },
   "scripts": {
-    "start": "node dist/file-sync.js",
-    "build": "bun build src/main/file-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
-    "build:bundle": "bun build src/main/file-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
+    "start": "node dist/node/file-sync.js",
+    "build": "npm run build:node && npm run build:bun",
+    "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
+    "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
+    "prepublishOnly": "npm run build",
     "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
     "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts",
     "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage"
@@ -33,6 +45,8 @@
   },
   "files": [
     "dist/**",
+    "bin-bun.js",
+    "bin-node.js",
     "README.md",
     "LICENSE"
   ],
