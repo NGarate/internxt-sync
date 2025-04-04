@@ -1,4 +1,4 @@
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * Environment utilities for the Internxt WebDAV Uploader
  * Handles runtime detection and system information

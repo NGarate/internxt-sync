@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Universal Entry Point for Internxt Sync
+ * Universal Entry Point for WebDAV Sync
  * 
  * This file automatically detects the runtime environment and runs the appropriate version:
  * - In Bun: Directly runs the TypeScript file for maximum performance
@@ -46,15 +46,15 @@ function isBunAvailable() {
 // Main function to run the appropriate version
 async function main() {
   const args = process.argv.slice(2);
-  const tsFile = path.join(__dirname, 'internxt-sync.ts');
-  const jsFile = path.join(__dirname, 'src', 'internxt-sync.js');
+  const tsFile = path.join(__dirname, 'src', 'main', 'file-sync.ts');
+  const jsFile = path.join(__dirname, 'dist', 'file-sync.js');
   
   try {
     // CASE 1: Running in Bun - use TypeScript directly
     if (isBunRuntime) {
       if (fs.existsSync(tsFile)) {
         try {
-          const module = await import('./internxt-sync.ts');
+          const module = await import('./src/main/file-sync.ts');
           if (typeof module.default === 'function') {
             return module.default();
           } else {
@@ -109,11 +109,11 @@ async function main() {
 
 // Helper function to run the JavaScript version
 async function runJavaScriptVersion() {
-  const jsFile = path.join(__dirname, 'src', 'internxt-sync.js');
+  const jsFile = path.join(__dirname, 'dist', 'file-sync.js');
   
   if (fs.existsSync(jsFile)) {
     try {
-      const module = await import('./src/internxt-sync.js');
+      const module = await import('./dist/file-sync.js');
       if (typeof module.default === 'function') {
         return module.default();
       } else {
@@ -125,11 +125,11 @@ async function runJavaScriptVersion() {
     }
   } else {
     // If JS file doesn't exist, try to build it if we have Bun
-    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'internxt-sync.ts'))) {
+    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'src', 'main', 'file-sync.ts'))) {
       console.log(`${colors.yellow}JavaScript version not found, attempting to build it...${colors.reset}`);
       
       try {
-        execSync('bun build internxt-sync.ts --outdir src --target node --external chalk', {
+        execSync('bun build src/main/file-sync.ts --outdir dist --target node --format esm', {
           stdio: 'inherit',
           cwd: __dirname
         });

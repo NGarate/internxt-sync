@@ -1,4 +1,4 @@
-import { Verbosity } from '../interfaces/logger.js';
+import { Verbosity } from '../interfaces/logger';
 /**
  * HashCache
  * Handles the caching of file hashes to detect changes
@@ -7,7 +7,7 @@ import { Verbosity } from '../interfaces/logger.js';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import * as logger from '../../utils/logger.js';
+import * as logger from '../../utils/logger';
 
 /**
  * HashCache class to manage file hash caching

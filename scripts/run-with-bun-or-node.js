@@ -36,7 +36,7 @@ function runApp() {
   // If we're already running in Bun, we can just import the TypeScript file directly
   if (isBunRuntime) {
     console.log('Already running in Bun, executing TypeScript directly...');
-    const tsFile = path.join(rootDir, 'internxt-sync.ts');
+    const tsFile = path.join(rootDir, 'src', 'main', 'file-sync.ts');
     
     if (fs.existsSync(tsFile)) {
       import(tsFile)
@@ -60,7 +60,7 @@ function runApp() {
   // Otherwise, if Bun is available, spawn a new Bun process
   else if (isBunAvailable()) {
     console.log('Using Bun runtime...');
-    const tsFile = path.join(rootDir, 'internxt-sync.ts');
+    const tsFile = path.join(rootDir, 'src', 'main', 'file-sync.ts');
     
     if (fs.existsSync(tsFile)) {
       // Run TypeScript file directly with Bun
@@ -85,7 +85,7 @@ function runApp() {
 // Run with Node.js
 function runWithNode() {
   const args = process.argv.slice(2);
-  const jsFile = path.join(rootDir, 'src', 'internxt-sync.js');
+  const jsFile = path.join(rootDir, 'dist', 'file-sync.js');
   
   if (fs.existsSync(jsFile)) {
     // Import the JavaScript module

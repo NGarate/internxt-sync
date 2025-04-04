@@ -6,10 +6,10 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
-import * as logger from '../utils/logger.js';
-import { calculateChecksum, loadJsonFromFile, saveJsonToFile } from '../utils/fs-utils.js';
-import { HashCache } from './upload/hash-cache.js';
-import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner.js';
+import * as logger from '../utils/logger';
+import { calculateChecksum, loadJsonFromFile, saveJsonToFile } from '../utils/fs-utils';
+import { HashCache } from './upload/hash-cache';
+import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner';
 
 /**
  * File Scanner class to handle directory scanning and file selection
@@ -20,17 +20,20 @@ export default class FileScanner {
   private uploadState: UploadState;
   private verbosity: number;
   private hashCache: HashCache;
+  private forceUpload: boolean;
 
   /**
    * Create a new FileScanner
    * @param {string} sourceDir - The source directory to scan
    * @param {number} verbosity - Verbosity level
+   * @param {boolean} forceUpload - Whether to force upload all files regardless of change
    */
-  constructor(sourceDir: string, verbosity: number = logger.Verbosity.Normal) {
+  constructor(sourceDir: string, verbosity: number = logger.Verbosity.Normal, forceUpload: boolean = false) {
     this.sourceDir = path.resolve(sourceDir);
     this.statePath = path.join(this.sourceDir, ".internxt-upload-state.json");
     this.uploadState = { files: {}, lastRun: "" };
     this.verbosity = verbosity;
+    this.forceUpload = forceUpload;
     
     // Use the same hash cache that the uploader will use
     this.hashCache = new HashCache(
@@ -127,8 +130,14 @@ export default class FileScanner {
     const filesToUpload: FileInfo[] = [];
     
     for (const file of files) {
-      // First check the hash cache - this will be used again during upload
-      // so this prevents unnecessary upload attempts
+      // If force upload is enabled, mark all files as changed
+      if (this.forceUpload) {
+        file.hasChanged = true;
+        filesToUpload.push(file);
+        continue;
+      }
+      
+      // Otherwise, check the hash cache as usual
       const hasChanged = await this.hashCache.hasChanged(file.absolutePath);
       file.hasChanged = hasChanged;
       
@@ -156,7 +165,12 @@ export default class FileScanner {
 
     // Determine which files need uploading
     const filesToUpload = await this.determineFilesToUpload(allFiles);
-    logger.info(`${filesToUpload.length} files need to be uploaded.`, this.verbosity);
+    
+    if (this.forceUpload && filesToUpload.length > 0) {
+      logger.info(`Force upload enabled. All ${filesToUpload.length} files will be uploaded.`, this.verbosity);
+    } else {
+      logger.info(`${filesToUpload.length} files need to be uploaded.`, this.verbosity);
+    }
 
     // Calculate total size
     const totalSizeBytes = filesToUpload.reduce((sum, file) => sum + file.size, 0);

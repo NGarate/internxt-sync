@@ -1,11 +1,9 @@
 /**
  * Tests for File System Utilities
- * 
- * To run these tests: bun test src/test/fs-utils.test.js
  */
 
 import { expect, describe, it, beforeEach, spyOn, mock } from 'bun:test';
-import * as fsUtils from '../utils/fs-utils.js';
+import * as fsUtils from './fs-utils';
 import fs from 'fs';
 import crypto from 'crypto';
 import { Readable } from 'stream';

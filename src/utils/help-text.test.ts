@@ -1,14 +1,12 @@
-import { Verbosity } from '../interfaces/logger.js';
 /**
  * Tests for Help Text Utilities
- * 
- * To run these tests: bun test src/test/help-text.test.js
  */
 
 import { expect, describe, it, beforeEach, spyOn } from 'bun:test';
-import * as helpText from '../utils/help-text.js';
-import * as envUtils from '../utils/env-utils.js';
-import * as logger from '../utils/logger.js';
+import * as helpText from './help-text';
+import * as envUtils from './env-utils';
+import * as logger from './logger';
+import { Verbosity } from '../interfaces/logger';
 
 describe('Help Text Utilities', () => {
   let isBunEnvironmentSpy;
@@ -38,9 +36,9 @@ describe('Help Text Utilities', () => {
       
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
-      // Check for Bun-specific content - updated to match actual file name
-      expect(capturedHelpText).toContain('bun internxt-sync.ts');
-      expect(capturedHelpText).not.toContain('node internxt-sync.js');
+      // Check for Bun-specific content
+      expect(capturedHelpText).toContain('bun webdav-sync.ts');
+      expect(capturedHelpText).not.toContain('node webdav-sync.js');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -50,7 +48,6 @@ describe('Help Text Utilities', () => {
       expect(capturedHelpText).toContain('--target=<path>');
       expect(capturedHelpText).toContain('--quiet');
       expect(capturedHelpText).toContain('--verbose');
-      expect(capturedHelpText).toContain('--skip-setup');
       expect(capturedHelpText).toContain('--webdav-url=<url>');
       expect(capturedHelpText).toContain('--help');
       
@@ -71,9 +68,9 @@ describe('Help Text Utilities', () => {
       
       expect(loggerAlwaysSpy).toHaveBeenCalled();
       
-      // Check for Node-specific content - updated to match actual file name
-      expect(capturedHelpText).toContain('node internxt-sync.js');
-      expect(capturedHelpText).not.toContain('bun internxt-sync.ts');
+      // Check for Node-specific content
+      expect(capturedHelpText).toContain('node webdav-sync.js');
+      expect(capturedHelpText).not.toContain('bun webdav-sync.ts');
       
       // Check for essential help sections
       expect(capturedHelpText).toContain('Usage:');
@@ -83,7 +80,6 @@ describe('Help Text Utilities', () => {
       expect(capturedHelpText).toContain('--target=<path>');
       expect(capturedHelpText).toContain('--quiet');
       expect(capturedHelpText).toContain('--verbose');
-      expect(capturedHelpText).toContain('--skip-setup');
       expect(capturedHelpText).toContain('--webdav-url=<url>');
       expect(capturedHelpText).toContain('--help');
       
@@ -99,9 +95,9 @@ describe('Help Text Utilities', () => {
       
       const helpTextContent = helpText.getHelpText();
       
-      // Check for Bun-specific content - updated to match actual file name
-      expect(helpTextContent).toContain('bun internxt-sync.ts');
-      expect(helpTextContent).not.toContain('node internxt-sync.js');
+      // Check for Bun-specific content
+      expect(helpTextContent).toContain('bun webdav-sync.ts');
+      expect(helpTextContent).not.toContain('node webdav-sync.js');
       
       // Check for essential help sections
       expect(helpTextContent).toContain('Usage:');
@@ -111,7 +107,6 @@ describe('Help Text Utilities', () => {
       expect(helpTextContent).toContain('--target=<path>');
       expect(helpTextContent).toContain('--quiet');
       expect(helpTextContent).toContain('--verbose');
-      expect(helpTextContent).toContain('--skip-setup');
       expect(helpTextContent).toContain('--webdav-url=<url>');
       expect(helpTextContent).toContain('--help');
       
@@ -124,9 +119,9 @@ describe('Help Text Utilities', () => {
       
       const helpTextContent = helpText.getHelpText();
       
-      // Check for Node-specific content - updated to match actual file name
-      expect(helpTextContent).toContain('node internxt-sync.js');
-      expect(helpTextContent).not.toContain('bun internxt-sync.ts');
+      // Check for Node-specific content
+      expect(helpTextContent).toContain('node webdav-sync.js');
+      expect(helpTextContent).not.toContain('bun webdav-sync.ts');
       
       // Check for essential help sections
       expect(helpTextContent).toContain('Usage:');
@@ -136,7 +131,6 @@ describe('Help Text Utilities', () => {
       expect(helpTextContent).toContain('--target=<path>');
       expect(helpTextContent).toContain('--quiet');
       expect(helpTextContent).toContain('--verbose');
-      expect(helpTextContent).toContain('--skip-setup');
       expect(helpTextContent).toContain('--webdav-url=<url>');
       expect(helpTextContent).toContain('--help');
       

@@ -1,11 +1,11 @@
-import { Verbosity } from '../interfaces/logger.js';
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { Verbosity } from '../interfaces/logger';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * WebDAV File Service
  * Handles WebDAV file operations such as uploading
  */
 
-import * as logger from '../../utils/logger.js';
+import * as logger from '../../utils/logger';
 import * as fs from 'fs';
 
 /**
@@ -53,10 +53,13 @@ export class WebDAVFileService {
       // Upload using WebDAV client
       await this.client.putFileContents(normalizedPath, fileContent);
       
-      logger.success(`File uploaded successfully: ${filePath}`, this.verbosity);
+      // Only log at verbose level since the success will be logged by the uploader
+      logger.verbose(`File upload completed: ${filePath}`, this.verbosity);
+      
+      // Return success with newline in message
       return { success: true, output: 'File uploaded successfully' };
     } catch (error) {
-      logger.error(`Failed to upload file: ${error.message}`, this.verbosity);
+      logger.error(`Failed to upload file: ${error.message}`);
       return { success: false, output: error.message };
     }
   }
@@ -71,8 +74,66 @@ export class WebDAVFileService {
       const normalizedPath = this.normalizePath(dirPath);
       return await this.client.getDirectoryContents(normalizedPath);
     } catch (error) {
-      logger.error(`Failed to get directory contents: ${error.message}`, this.verbosity);
+      logger.error(`Failed to get directory contents: ${error.message}`);
       return [];
+    }
+  }
+
+  /**
+   * Upload a file with progress tracking
+   * @param {string} filePath - Path to the file to upload
+   * @param {string} targetPath - Target path on the server
+   * @param {Function} progressCallback - Callback for progress updates
+   * @param {number} timeoutSeconds - Timeout in seconds (unused, kept for compatibility)
+   * @returns {Promise<{success: boolean, output: string}>} Upload result
+   */
+  async uploadFileWithProgress(filePath, targetPath, progressCallback, timeoutSeconds = 60) {
+    try {
+      logger.verbose(`Uploading file with progress tracking: ${filePath} to /${targetPath}`, this.verbosity);
+      
+      const normalizedPath = this.normalizePath(targetPath);
+      logger.verbose(`Using normalized path for upload: "${normalizedPath}"`, this.verbosity);
+      
+      // Get file stats to calculate total size
+      const stats = await fs.promises.stat(filePath);
+      const totalSize = stats.size;
+      
+      // Read the file
+      const fileContent = await fs.promises.readFile(filePath);
+      
+      // Call progress callback with 0% progress
+      if (typeof progressCallback === 'function') {
+        progressCallback({ 
+          percent: 0, 
+          loaded: 0, 
+          total: totalSize,
+          filePath,
+          targetPath: normalizedPath
+        });
+      }
+      
+      // Upload using WebDAV client
+      await this.client.putFileContents(normalizedPath, fileContent);
+      
+      // Call progress callback with 100% progress
+      if (typeof progressCallback === 'function') {
+        progressCallback({ 
+          percent: 100, 
+          loaded: totalSize, 
+          total: totalSize,
+          filePath,
+          targetPath: normalizedPath
+        });
+      }
+      
+      // Only log at verbose level since the success will be logged by the uploader
+      logger.verbose(`File upload with progress tracking completed: ${filePath}`, this.verbosity);
+      
+      // Return success with newline in message
+      return { success: true, output: 'File uploaded successfully' };
+    } catch (error) {
+      logger.error(`Failed to upload file with progress tracking: ${error.message}`);
+      return { success: false, output: error.message };
     }
   }
 } 

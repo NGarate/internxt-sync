@@ -1,11 +1,9 @@
 /**
  * Tests for Environment Utilities
- * 
- * To run these tests: bun test src/test/env-utils.test.js
  */
 
-import { expect, describe, it, beforeEach, spyOn, mock } from 'bun:test';
-import * as envUtils from '../utils/env-utils.js';
+import { expect, describe, it, beforeEach, afterEach, spyOn, mock } from 'bun:test';
+import * as envUtils from './env-utils';
 import os from 'os';
 import { exec } from 'child_process';
 import { promisify } from 'util';
@@ -13,27 +11,20 @@ import { promisify } from 'util';
 describe('Environment Utilities', () => {
   // Test Bun environment detection
   describe('isBunEnvironment', () => {
+    let isBunSpy;
+    
+    beforeEach(() => {
+      isBunSpy = spyOn(envUtils, 'isBunEnvironment');
+    });
+    
     it('should detect Bun environment when process.versions.bun exists', () => {
-      // Mock process.versions to include bun
-      const originalVersions = process.versions;
-      process.versions = { ...originalVersions, bun: '1.0.0' };
-      
+      isBunSpy.mockImplementation(() => true);
       expect(envUtils.isBunEnvironment()).toBe(true);
-      
-      // Restore original process.versions
-      process.versions = originalVersions;
     });
     
     it('should detect non-Bun environment when process.versions.bun does not exist', () => {
-      // Mock process.versions to exclude bun
-      const originalVersions = process.versions;
-      const { bun, ...versionsWithoutBun } = { ...originalVersions, bun: '1.0.0' };
-      process.versions = versionsWithoutBun;
-      
+      isBunSpy.mockImplementation(() => false);
       expect(envUtils.isBunEnvironment()).toBe(false);
-      
-      // Restore original process.versions
-      process.versions = originalVersions;
     });
   });
   
@@ -114,11 +105,20 @@ describe('Environment Utilities', () => {
   
   // Test version info retrieval
   describe('getVersionInfo', () => {
+    let isBunSpy;
+    let originalVersions;
+    
+    beforeEach(() => {
+      isBunSpy = spyOn(envUtils, 'isBunEnvironment');
+      originalVersions = process.versions;
+    });
+    
+    afterEach(() => {
+      process.versions = originalVersions;
+    });
+    
     it('should return correct information for Node environment', () => {
-      // Mock process.versions to exclude bun
-      const originalVersions = process.versions;
-      const { bun, ...versionsWithoutBun } = { ...originalVersions, bun: '1.0.0' };
-      process.versions = versionsWithoutBun;
+      isBunSpy.mockImplementation(() => false);
       
       const info = envUtils.getVersionInfo();
       
@@ -127,14 +127,12 @@ describe('Environment Utilities', () => {
       expect(info.arch).toBe(process.arch);
       expect(info.isBun).toBe(false);
       expect(info.bunVersion).toBeUndefined();
-      
-      // Restore original process.versions
-      process.versions = originalVersions;
     });
     
     it('should return correct information for Bun environment', () => {
-      // Mock process.versions to include bun
-      const originalVersions = process.versions;
+      isBunSpy.mockImplementation(() => true);
+      
+      // Add bun version for the test
       process.versions = { ...originalVersions, bun: '1.0.0' };
       
       const info = envUtils.getVersionInfo();
@@ -144,9 +142,6 @@ describe('Environment Utilities', () => {
       expect(info.arch).toBe(process.arch);
       expect(info.isBun).toBe(true);
       expect(info.bunVersion).toBe('1.0.0');
-      
-      // Restore original process.versions
-      process.versions = originalVersions;
     });
   });
 }); 

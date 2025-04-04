@@ -1,6 +1,6 @@
-import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner.js';
-import { Verbosity } from '../interfaces/logger.js';
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner';
+import { Verbosity } from '../interfaces/logger';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * WebDAV Uploader
  * Handles file uploads to the WebDAV server with improved modularity
@@ -8,11 +8,11 @@ import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, U
 
 import path from 'path';
 import os from 'os';
-import * as logger from '../../utils/logger.js';
-import WebDAVService from '../webdav/webdav-service.js';
-import { HashCache } from './hash-cache.js';
-import { ProgressTracker } from './progress-tracker.js';
-import { FileUploadManager } from './file-upload-manager.js';
+import * as logger from '../../utils/logger';
+import WebDAVService from '../webdav/webdav-service';
+import { HashCache } from './hash-cache';
+import { ProgressTracker } from './progress-tracker';
+import { FileUploadManager } from './file-upload-manager';
 
 /**
  * WebDAV Uploader class with improved modularity
@@ -48,6 +48,8 @@ export default class Uploader {
     
     // Initialize state
     this.fileScanner = null;
+    // Track successfully uploaded files to avoid duplicate messages
+    this.uploadedFiles = new Set();
   }
 
   /**
@@ -66,6 +68,12 @@ export default class Uploader {
    */
   async handleFileUpload(fileInfo) {
     try {
+      // Check if we've already uploaded this file in this session
+      if (this.uploadedFiles.has(fileInfo.relativePath)) {
+        logger.verbose(`File ${fileInfo.relativePath} already uploaded in this session, skipping`, this.verbosity);
+        return { success: true, filePath: fileInfo.relativePath };
+      }
+      
       // Check if file has changed - use flag from file scanner if available
       // The scanner already checked using the same hash cache
       if (fileInfo.hasChanged === false) {
@@ -117,7 +125,12 @@ export default class Uploader {
       const result = await this.webdavService.uploadFile(fileInfo.absolutePath, targetPath);
       
       if (result.success) {
+        // Track that we've uploaded this file to avoid duplicate messages
+        this.uploadedFiles.add(fileInfo.relativePath);
+        
+        // Log success
         logger.success(`Successfully uploaded ${fileInfo.relativePath}`, this.verbosity);
+        
         // Update file scanner if available
         if (this.fileScanner) {
           this.fileScanner.updateFileState(fileInfo.relativePath, fileInfo.checksum);
@@ -162,6 +175,13 @@ export default class Uploader {
       return;
     }
 
+    // Show starting message before initializing progress tracker
+    // This ensures it appears on its own line
+    logger.info(`Starting parallel upload with ${this.uploadManager.maxConcurrency} concurrent uploads...`, this.verbosity);
+    
+    // Small delay to ensure the message is displayed before progress bar
+    await new Promise(resolve => setTimeout(resolve, 50));
+    
     // Initialize progress tracker
     this.progressTracker.initialize(filesToUpload.length);
     this.progressTracker.startProgressUpdates();

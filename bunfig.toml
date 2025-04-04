@@ -24,7 +24,7 @@ enabled = true
 # Test configuration
 [test]
 # Configure preload scripts for tests
-preload = ["./test-config/helpers/setup.ts"]
+preload = ["./test-config/setup.ts"]
 
 # Set test environment variables
 env = { NODE_ENV = "test" }
@@ -37,6 +37,11 @@ pattern = "**/*.test.ts"
 
 # Determine whether to use Jest compatibility mode
 jest = false
+
+# Add test loader configuration
+[test.loader]
+extensions = [".ts", ".tsx"]
+config = "./test-config/bun-test-loader.ts"
 
 # Configure Bun's native module mocking for tests
 [test.mocks]
@@ -64,10 +69,19 @@ lockfile = "text"
 
 # Define scopes and registries
 [[scopes]]
-name = "internxt-sync"
+name = "webdav-sync"
 registry = "https://registry.npmjs.org/"
 
 # Run configuration
 [run]
 # Automatically watch for changes when running scripts
-watch = false 
+watch = false
+
+# Resolve configuration
+[resolve]
+# Enable using bare specifiers for local packages
+modules = ["node_modules"]
+
+# Use Node-style resolution to be more lenient with file extensions
+jsx = "automatic"
+extensions = [".tsx", ".ts", ".jsx", ".js", ".json"] 

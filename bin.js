@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 
 /**
- * Internxt Sync CLI Wrapper
+ * WebDAV File Sync CLI Wrapper
  * 
- * This provides a simple command-line interface for the Internxt WebDAV Uploader.
- * Users simply need to install this package globally and run 'internxt-sync'.
+ * This provides a simple command-line interface for the WebDAV File Synchronization Tool.
+ * Users simply need to install this package globally and run 'webdav-sync'.
  */
 
 // Pre-load external dependencies to ensure they're available
@@ -16,4 +16,4 @@ globalThis.chalkImport = chalk;
 globalThis.webdavImport = webdav;
 
 // Import and run the main application module
-import './src/main/internxt-sync.js'; 
+import './dist/file-sync.js'; 

@@ -1,19 +1,19 @@
 /**
  * Tests for FileScanner
  * 
- * To run these tests: bun test src/test/file-scanner.test.js
+ * To run these tests: bun test src/core/file-scanner.test.ts
  */
 
-// Import test helpers
-import './bun-test-fix';
-
+// Import test helpers and utilities
 import { expect, describe, it, beforeEach, spyOn, mock } from 'bun:test';
-import FileScanner from '../core/file-scanner.js';
-import * as fsUtils from '../utils/fs-utils.js';
-import * as logger from '../utils/logger.js';
+import { createMockEventEmitter } from '@mocks/event-emitter';
+
+import FileScanner from './file-scanner';
+import * as fsUtils from '../utils/fs-utils';
+import * as logger from '../utils/logger';
 import fs from 'fs';
 import path from 'path';
-import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner.js';
+import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner';
 
 describe('FileScanner', () => {
   // Set up spies and mocks

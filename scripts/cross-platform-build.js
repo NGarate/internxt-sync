@@ -44,7 +44,6 @@ const isBunRuntime = typeof process !== 'undefined' &&
 // Main build function
 function build() {
   const srcDir = path.join(rootDir, 'src');
-  const tsFile = path.join(rootDir, 'internxt-sync.ts');
   
   // Create src directory if it doesn't exist
   if (!fs.existsSync(srcDir)) {

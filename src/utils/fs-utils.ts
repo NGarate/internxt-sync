@@ -1,4 +1,4 @@
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * File system utilities for the Internxt WebDAV Uploader
  * Handles file operations, checksums, and path manipulations

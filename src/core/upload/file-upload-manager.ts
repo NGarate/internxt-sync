@@ -1,11 +1,11 @@
-import { Verbosity } from '../interfaces/logger.js';
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { Verbosity } from '../interfaces/logger';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * FileUploadManager
  * Manages the concurrent upload of files to the WebDAV server
  */
 
-import * as logger from '../../utils/logger.js';
+import * as logger from '../../utils/logger';
 
 /**
  * FileUploadManager class for handling concurrent file uploads

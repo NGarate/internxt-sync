@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 /**
- * Build script for Internxt WebDAV Uploader
+ * Build script for WebDAV File Sync
  * Handles building the application with Bun
  */
 
@@ -30,9 +30,9 @@ if (!existsSync(distDir)) {
   mkdirSync(distDir, { recursive: true });
 }
 
-console.log(`${colors.blue}Building Internxt WebDAV Uploader with Bun...${colors.reset}`);
+console.log(`${colors.blue}Building WebDAV File Sync with Bun...${colors.reset}`);
 
-// Run the Bun build command for internxt-sync.ts and index.ts
+// Run the Bun build command for file-sync.ts and index.ts
 function runBuildCommand(entry: string, outname?: string) {
   console.log(`${colors.blue}Building ${entry}...${colors.reset}`);
   
@@ -65,7 +65,7 @@ function runBuildCommand(entry: string, outname?: string) {
 }
 
 // Build main entry points
-runBuildCommand('internxt-sync.ts');
+runBuildCommand('src/main/file-sync.ts');
 runBuildCommand('index.ts');
 
 // Add shebang to make executable

@@ -1,15 +1,15 @@
-import { Verbosity } from '../interfaces/logger.js';
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { Verbosity } from '../interfaces/logger';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * WebDAV Service
  * Main service that composes all WebDAV related services
  */
 
-import * as logger from '../../utils/logger.js';
-import { createWebDAVClient } from './webdav-client-factory.js';
-import { WebDAVDirectoryService } from './webdav-directory-service.js';
-import { WebDAVFileService } from './webdav-file-service.js';
-import { WebDAVConnectivityService } from './webdav-connectivity-service.js';
+import * as logger from '../../utils/logger';
+import { createWebDAVClient } from './webdav-client-factory';
+import { WebDAVDirectoryService } from './webdav-directory-service';
+import { WebDAVFileService } from './webdav-file-service';
+import { WebDAVConnectivityService } from './webdav-connectivity-service';
 
 /**
  * Main WebDAV service that composes specialized services
@@ -40,7 +40,12 @@ export default class WebDAVService {
    * @returns {Promise<boolean>} True if successful
    */
   async createDirectory(dirPath, targetDir = '') {
-    return this.directoryService.createDirectory(dirPath, targetDir);
+    try {
+      return await this.directoryService.createDirectory(dirPath, targetDir);
+    } catch (error) {
+      logger.error(`Failed to create directory: ${error.message}`);
+      return false;
+    }
   }
 
   /**
@@ -49,7 +54,12 @@ export default class WebDAVService {
    * @returns {Promise<boolean>} True if successful
    */
   async createDirectoryStructure(targetDir) {
-    return this.directoryService.createDirectoryStructure(targetDir);
+    try {
+      return await this.directoryService.createDirectoryStructure(targetDir);
+    } catch (error) {
+      logger.error(`Failed to create directory structure: ${error.message}`);
+      return false;
+    }
   }
 
   /**
@@ -57,7 +67,12 @@ export default class WebDAVService {
    * @returns {Promise<boolean>} True if the server is accessible
    */
   async checkConnectivity() {
-    return this.connectivityService.checkConnectivity();
+    try {
+      return await this.connectivityService.checkConnectivity();
+    } catch (error) {
+      logger.error(`Failed to check connectivity: ${error.message}`);
+      return false;
+    }
   }
 
   /**
@@ -65,9 +80,14 @@ export default class WebDAVService {
    * @param {string} filePath - Path to the file to upload
    * @param {string} targetPath - Target path on the server
    * @param {number} timeoutSeconds - Timeout in seconds
-   * @returns {Promise<{success: boolean, output: string}>} Upload result
+   * @returns {Promise<boolean>} True if successful
    */
   async uploadFile(filePath, targetPath, timeoutSeconds = 60) {
-    return this.fileService.uploadFile(filePath, targetPath, timeoutSeconds);
+    try {
+      return await this.fileService.uploadFile(filePath, targetPath, timeoutSeconds);
+    } catch (error) {
+      logger.error(`Failed to upload file: ${error.message}`);
+      return false;
+    }
   }
 } 

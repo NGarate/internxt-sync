@@ -1,6 +1,6 @@
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav.js';
+import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
- * Input utilities for the Internxt WebDAV Uploader
+ * Input utilities for the WebDAV File Sync
  * Handles user input/prompt functionality
  */
 
@@ -10,7 +10,7 @@ import { exec } from 'child_process';
 import { createInterface } from 'readline';
 import { Writable } from 'stream';
 import { spawnSync } from 'child_process';
-import { isBunEnvironment } from './env-utils.js';
+import { isBunEnvironment } from './env-utils';
 
 const execAsync = promisify(exec);
 
@@ -61,8 +61,8 @@ export function parseArguments(args) {
     verbosity: 1, // Normal verbosity
     cores: undefined, // Will be determined based on CPU cores
     targetDir: '',
-    skipSetup: false,
     webdavUrl: undefined,
+    forceUpload: false, // Whether to force upload all files regardless of change
     showHelp: false
   };
   
@@ -85,8 +85,9 @@ export function parseArguments(args) {
     options.verbosity = 2; // Verbose
   }
   
-  if (args.includes("--skip-setup")) {
-    options.skipSetup = true;
+  // Check for force upload flag
+  if (args.includes("--force")) {
+    options.forceUpload = true;
   }
   
   for (const arg of args) {
@@ -249,24 +250,20 @@ async function getSecurePasswordWindows(prompt) {
     
     return password;
   } catch (error) {
-    // If the custom method fails, fall back to a basic approach
+    // If there's any error with the secure method, fall back to basic prompt
     console.warn('Warning: Secure password input not available. Your password may be visible.');
     return promptUser(`${prompt} (warning: may be visible): `);
   }
 }
 
 /**
- * Prompts the user for credentials with secure password input
- * 
- * @param {string} usernamePrompt - The prompt for the username
- * @param {string} passwordPrompt - The prompt for the password
- * @returns {Promise<{username: string, password: string}>} - The credentials
+ * Prompt for username and password
+ * @param {string} usernamePrompt - The prompt for username
+ * @param {string} passwordPrompt - The prompt for password
+ * @returns {Promise<Object>} Object with username and password
  */
 export async function getCredentials(usernamePrompt = 'Username', passwordPrompt = 'Password') {
-  // Get username (visible)
   const username = await promptUser(`${usernamePrompt}: `);
-  
-  // Get password (hidden)
   const password = await getSecurePassword(passwordPrompt);
   
   return { username, password };

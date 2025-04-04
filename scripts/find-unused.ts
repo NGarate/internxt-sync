@@ -48,7 +48,7 @@ const excludeFiles = [
 
 // Entry point files that should always be kept
 const entryPoints = [
-  'internxt-sync.ts',
+  'src/main/file-sync.ts',
   'index.ts',
   'bin.js'
 ];

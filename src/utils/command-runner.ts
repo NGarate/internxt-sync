@@ -1,4 +1,4 @@
-import { Verbosity } from '../interfaces/logger.js';
+import { Verbosity } from '../interfaces/logger';
 /**
  * Command runner utility
  * Handles CLI command execution with robust error handling
@@ -6,7 +6,7 @@ import { Verbosity } from '../interfaces/logger.js';
 
 import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
-import * as logger from './logger.js';
+import * as logger from './logger';
 
 const execAsync = promisify(exec);
 

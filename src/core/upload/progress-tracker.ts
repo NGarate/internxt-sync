@@ -1,11 +1,11 @@
-import { Verbosity } from '../interfaces/logger.js';
+import { Verbosity } from '../interfaces/logger';
 /**
  * ProgressTracker
  * Handles tracking and displaying upload progress
  */
 
 import chalk from 'chalk';
-import * as logger from '../../utils/logger.js';
+import * as logger from '../../utils/logger';
 
 /**
  * ProgressTracker class for monitoring upload progress
@@ -28,6 +28,12 @@ export class ProgressTracker {
     this.originalConsoleInfo = console.info;
     this.originalConsoleWarn = console.warn;
     this.originalConsoleError = console.error;
+    
+    // Track last message time to determine if we need to redraw progress
+    this.lastMessageTime = 0;
+    
+    // Store whether we've drawn the progress bar yet
+    this.hasDrawnProgressBar = false;
   }
 
   /**
@@ -38,6 +44,8 @@ export class ProgressTracker {
     this.totalFiles = totalFiles;
     this.completedFiles = 0;
     this.failedFiles = 0;
+    this.lastMessageTime = 0;
+    this.hasDrawnProgressBar = false;
     this.setupConsoleOverrides();
   }
 
@@ -47,12 +55,34 @@ export class ProgressTracker {
   setupConsoleOverrides() {
     const self = this;
     
+    // Helper function to move cursor up one line and clear it
+    const moveCursorUp = () => {
+      process.stdout.write('\x1B[1A\x1B[K');
+    };
+    
     // Override console methods to preserve progress bar
     console.log = function() {
       if (self.isTrackingActive) {
-        process.stdout.write('\r\x1B[K'); // Clear the current line
+        // If we've shown a progress bar, clear it
+        if (self.hasDrawnProgressBar) {
+          // Clear the line with progress bar
+          process.stdout.write('\r\x1B[K');
+        }
+        
+        // Print the log message
         self.originalConsoleLog.apply(console, arguments);
-        self.displayProgress(); // Redraw progress bar
+        
+        // Ensure the message ends with a newline
+        const lastArg = arguments[arguments.length - 1];
+        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
+          process.stdout.write('\n');
+        }
+        
+        // Record when this message was shown
+        self.lastMessageTime = Date.now();
+        
+        // Redraw progress bar on a new line
+        process.nextTick(() => self.displayProgress());
       } else {
         self.originalConsoleLog.apply(console, arguments);
       }
@@ -60,9 +90,26 @@ export class ProgressTracker {
     
     console.info = function() {
       if (self.isTrackingActive) {
-        process.stdout.write('\r\x1B[K'); // Clear the current line
+        // If we've shown a progress bar, clear it
+        if (self.hasDrawnProgressBar) {
+          // Clear the line with progress bar
+          process.stdout.write('\r\x1B[K');
+        }
+        
+        // Print the info message
         self.originalConsoleInfo.apply(console, arguments);
-        self.displayProgress(); // Redraw progress bar
+        
+        // Ensure the message ends with a newline
+        const lastArg = arguments[arguments.length - 1];
+        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
+          process.stdout.write('\n');
+        }
+        
+        // Record when this message was shown
+        self.lastMessageTime = Date.now();
+        
+        // Redraw progress bar on a new line
+        process.nextTick(() => self.displayProgress());
       } else {
         self.originalConsoleInfo.apply(console, arguments);
       }
@@ -70,9 +117,26 @@ export class ProgressTracker {
     
     console.warn = function() {
       if (self.isTrackingActive) {
-        process.stdout.write('\r\x1B[K'); // Clear the current line
+        // If we've shown a progress bar, clear it
+        if (self.hasDrawnProgressBar) {
+          // Clear the line with progress bar
+          process.stdout.write('\r\x1B[K');
+        }
+        
+        // Print the warning message
         self.originalConsoleWarn.apply(console, arguments);
-        self.displayProgress(); // Redraw progress bar
+        
+        // Ensure the message ends with a newline
+        const lastArg = arguments[arguments.length - 1];
+        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
+          process.stdout.write('\n');
+        }
+        
+        // Record when this message was shown
+        self.lastMessageTime = Date.now();
+        
+        // Redraw progress bar on a new line
+        process.nextTick(() => self.displayProgress());
       } else {
         self.originalConsoleWarn.apply(console, arguments);
       }
@@ -80,9 +144,26 @@ export class ProgressTracker {
     
     console.error = function() {
       if (self.isTrackingActive) {
-        process.stdout.write('\r\x1B[K'); // Clear the current line
+        // If we've shown a progress bar, clear it
+        if (self.hasDrawnProgressBar) {
+          // Clear the line with progress bar
+          process.stdout.write('\r\x1B[K');
+        }
+        
+        // Print the error message
         self.originalConsoleError.apply(console, arguments);
-        self.displayProgress(); // Redraw progress bar
+        
+        // Ensure the message ends with a newline
+        const lastArg = arguments[arguments.length - 1];
+        if (typeof lastArg === 'string' && !lastArg.endsWith('\n')) {
+          process.stdout.write('\n');
+        }
+        
+        // Record when this message was shown
+        self.lastMessageTime = Date.now();
+        
+        // Redraw progress bar on a new line
+        process.nextTick(() => self.displayProgress());
       } else {
         self.originalConsoleError.apply(console, arguments);
       }
@@ -117,7 +198,7 @@ export class ProgressTracker {
    * Start displaying progress updates
    * @param {number} intervalMs - Update interval in milliseconds
    */
-  startProgressUpdates(intervalMs = 100) {
+  startProgressUpdates(intervalMs = 250) {
     // Clear any existing interval first
     this.stopProgressUpdates();
     
@@ -128,6 +209,9 @@ export class ProgressTracker {
     
     // Start a new interval
     this.updateInterval = setInterval(() => this.displayProgress(), intervalMs);
+    
+    // Display initial progress
+    this.displayProgress();
   }
 
   /**
@@ -143,11 +227,14 @@ export class ProgressTracker {
     this.restoreConsole();
     
     // Clear the current line to remove progress bar
-    process.stdout.write('\r\x1B[K');
+    if (this.hasDrawnProgressBar) {
+      process.stdout.write('\r\x1B[K');
+    }
   }
 
   /**
    * Display a progress bar showing upload status
+   * Makes sure the progress bar is always displayed on its own line
    */
   displayProgress() {
     if (!this.isTrackingActive) return;
@@ -158,12 +245,19 @@ export class ProgressTracker {
     const completeWidth = Math.floor((percentage / 100) * barWidth);
     const bar = "█".repeat(completeWidth) + "░".repeat(barWidth - completeWidth);
     
-    // Use carriage return to move to the beginning of the line
-    process.stdout.write(`\r[${bar}] ${percentage}% | ${processed}/${this.totalFiles}`);
+    // If we've already drawn a progress bar, clear it first
+    if (this.hasDrawnProgressBar) {
+      process.stdout.write('\r\x1B[K');
+    } else {
+      this.hasDrawnProgressBar = true;
+    }
     
-    // Add a newline when complete
+    // Draw the progress bar without a newline
+    process.stdout.write(`[${bar}] ${percentage}% | ${processed}/${this.totalFiles}\n`);
+    
+    // If all files processed, add a newline and stop updates
     if (processed === this.totalFiles && this.totalFiles > 0) {
-      process.stdout.write("\n");
+      process.stdout.write('\n');
       this.stopProgressUpdates();
     }
   }
@@ -176,6 +270,9 @@ export class ProgressTracker {
     if (this.isTrackingActive) {
       this.stopProgressUpdates();
     }
+    
+    // Add a newline for clean separation
+    process.stdout.write('\n');
     
     // Always show the final summary, regardless of verbosity
     if (this.failedFiles === 0) {

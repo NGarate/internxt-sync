@@ -3,7 +3,7 @@
  * This is a simplified version of the logger that doesn't rely on chalk
  */
 
-import { Verbosity, LogLevel } from '../interfaces/logger.js';
+import { Verbosity, LogLevel } from '../interfaces/logger';
 
 // Export verbosity levels from the interface
 export { Verbosity };

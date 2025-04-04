@@ -3,7 +3,7 @@
  * Handles console output with color formatting and verbosity levels
  */
 
-import { Verbosity, LogLevel } from '../interfaces/logger.js';
+import { Verbosity, LogLevel } from '../interfaces/logger';
 
 // Export verbosity levels from the interface
 export { Verbosity };
@@ -36,6 +36,15 @@ function clearOldMessages(): void {
 }
 
 /**
+ * Ensure a message ends with a newline
+ * @param {string} message - The message to check
+ * @returns {string} The message with a guaranteed newline at the end
+ */
+function ensureNewline(message: string): string {
+  return message.endsWith('\n') ? message : message + '\n';
+}
+
+/**
  * Log a message with the specified verbosity level
  * @param {string} message - The message to log
  * @param {LogLevel} level - The verbosity level of the message
@@ -54,11 +63,11 @@ export function log(
       return;
     }
     
-    // Add newline if needed and write to stdout
-    if (!message.endsWith('\n')) {
-      message += '\n';
-    }
-    process.stdout.write(message);
+    // Always ensure message ends with a newline
+    const formattedMessage = ensureNewline(message);
+    
+    // Write to stdout
+    process.stdout.write(formattedMessage);
     
     // Track message to prevent duplicates if needed
     if (!allowDuplicates) {
@@ -74,8 +83,7 @@ export function log(
  */
 export function error(message: string): void {
   const formattedMessage = `❌ ${message}`;
-  const output = formattedMessage.endsWith('\n') ? formattedMessage : formattedMessage + '\n';
-  process.stderr.write(`${colors.red}${output}${colors.reset}`);
+  process.stderr.write(ensureNewline(`${colors.red}${formattedMessage}${colors.reset}`));
 }
 
 /**
@@ -122,6 +130,5 @@ export function verbose(message: string, currentVerbosity: number): void {
  * @param {string} message - The message to show
  */
 export function always(message: string): void {
-  const output = message.endsWith('\n') ? message : message + '\n';
-  process.stdout.write(output);
+  process.stdout.write(ensureNewline(message));
 } 

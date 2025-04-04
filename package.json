@@ -1,26 +1,23 @@
 {
-  "name": "internxt-sync",
-  "version": "0.1.0",
-  "description": "WebDAV File Uploader for Internxt Drive. Securely uploads files to Internxt Drive using WebDAV. To run tests, use 'bun run test:src' which runs only the tests that have been fixed to work with Bun's testing framework.",
+  "name": "webdav-sync",
+  "version": "0.2.1",
+  "description": "WebDAV File Synchronization Tool. Securely uploads and manages files using WebDAVs.",
   "type": "module",
-  "main": "dist/internxt-sync.js",
+  "main": "dist/file-sync.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "internxt-sync": "dist/bin.js"
+    "webdav-sync": "dist/bin.js"
   },
   "scripts": {
-    "start": "node dist/internxt-sync.js",
-    "dev": "bun --watch src/main/internxt-sync.ts",
-    "build": "bun build src/main/internxt-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
-    "build:bundle": "bun build src/main/internxt-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
-    "build:clean": "bun run clean && bun run build",
+    "start": "node dist/file-sync.js",
+    "build": "bun build src/main/file-sync.ts --outdir dist --target node --format esm && bun build bin.js --outdir dist --target node --format esm",
+    "build:bundle": "bun build src/main/file-sync.ts --outdir dist --target node --format esm --splitting --packages=bundle && bun build bin.js --outdir dist --target node --format esm --splitting --packages=bundle",
     "clean": "powershell -Command \"Remove-Item -Path dist -Recurse -Force -ErrorAction SilentlyContinue\"",
-    "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/helpers/setup.ts",
-    "prepare:publish": "bun run clean && bun run build:bundle && bun run test",
-    "prepublishOnly": "bun run clean && bun run build:bundle"
+    "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts",
+    "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage",
+    "fix-imports": "node scripts/remove-extensions.js"
   },
   "keywords": [
-    "internxt",
     "webdav",
     "upload",
     "file-transfer",
@@ -35,14 +32,6 @@
     "bun": ">=1.0.0",
     "node": ">=18.0.0"
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/ngarate/internxt-sync.git"
-  },
-  "bugs": {
-    "url": "https://github.com/ngarate/internxt-sync/issues"
-  },
-  "homepage": "https://github.com/ngarate/internxt-sync#readme",
   "files": [
     "dist/**",
     "README.md",
@@ -56,21 +45,5 @@
   "dependencies": {
     "chalk": "^5.4.1",
     "webdav": "^5.8.0"
-  },
-  "bun": {},
-  "next-unused": {
-    "alias": {},
-    "include": [
-      "src"
-    ],
-    "exclude": [
-      "src/test",
-      "node_modules"
-    ],
-    "entrypoints": [
-      "src/main/internxt-sync.ts",
-      "index.ts",
-      "bin.js"
-    ]
   }
 }

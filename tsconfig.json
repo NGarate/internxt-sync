@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -20,7 +20,6 @@
     }
   },
   "include": [
-    "internxt-sync.ts",
     "index.ts",
     "src/**/*.ts"
   ],

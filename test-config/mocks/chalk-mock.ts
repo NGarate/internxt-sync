@@ -1,81 +1,116 @@
 /**
- * Mock implementation for chalk
+ * Chalk Mock
+ * 
+ * This file provides a mock implementation of the chalk library
+ * for use in tests.
  */
 
-// Simple chalk mock for testing
-// Creates a mock function that returns itself to allow chaining
-
-function createColorFunction() {
-  const colorFunc = (text: string) => text;
+/**
+ * Creates a chalk-like function that returns the input string
+ * decorated with format information.
+ */
+function createChalkFunction(name) {
+  // Create a function that adds style information
+  const fn = (str) => `[${name}]${str}[/${name}]`;
   
-  // Add chainable style methods
-  colorFunc.bold = colorFunc;
-  colorFunc.italic = colorFunc;
-  colorFunc.underline = colorFunc;
-  colorFunc.dim = colorFunc;
+  // Add properties to simulate chalk's API
+  fn.visible = true;
+  fn.level = 1;
   
-  // Add other color methods
-  colorFunc.red = colorFunc;
-  colorFunc.green = colorFunc;
-  colorFunc.yellow = colorFunc;
-  colorFunc.blue = colorFunc;
-  colorFunc.magenta = colorFunc;
-  colorFunc.cyan = colorFunc;
-  colorFunc.white = colorFunc;
-  colorFunc.gray = colorFunc;
-  colorFunc.grey = colorFunc;
+  // Add nested color methods to the function
+  // Common chalk colors
+  const colors = [
+    'black', 'red', 'green', 'yellow', 'blue', 
+    'magenta', 'cyan', 'white', 'gray', 'grey'
+  ];
   
-  // Add background colors
-  colorFunc.bgRed = colorFunc;
-  colorFunc.bgGreen = colorFunc;
-  colorFunc.bgYellow = colorFunc;
-  colorFunc.bgBlue = colorFunc;
-  colorFunc.bgMagenta = colorFunc;
-  colorFunc.bgCyan = colorFunc;
-  colorFunc.bgWhite = colorFunc;
+  // Common chalk modifiers
+  const modifiers = [
+    'bold', 'dim', 'italic', 'underline', 'inverse', 
+    'hidden', 'strikethrough'
+  ];
   
-  return colorFunc;
+  // Background colors
+  const bgColors = colors.map(color => `bg${color.charAt(0).toUpperCase()}${color.slice(1)}`);
+  
+  // Add all colors as properties
+  [...colors, ...modifiers, ...bgColors].forEach(color => {
+    Object.defineProperty(fn, color, {
+      get() {
+        return createChalkFunction(`${name}+${color}`);
+      }
+    });
+  });
+  
+  // Add chaining support
+  return new Proxy(fn, {
+    get(target, prop) {
+      if (prop in target) {
+        return target[prop];
+      }
+      
+      // Handle new color/style requests
+      if (typeof prop === 'string') {
+        return createChalkFunction(`${name}+${prop}`);
+      }
+      
+      return undefined;
+    }
+  });
 }
 
-// Create the main chalk object with basic color functions
-const chalkMock = createColorFunction();
+/**
+ * Create the base chalk mock object
+ */
+function createChalk() {
+  // Start with a base function
+  const chalk = (str) => str;
+  
+  // Make chalk.red, chalk.green, etc. available
+  const colors = [
+    'black', 'red', 'green', 'yellow', 'blue', 
+    'magenta', 'cyan', 'white', 'gray', 'grey'
+  ];
+  
+  // Common chalk modifiers
+  const modifiers = [
+    'bold', 'dim', 'italic', 'underline', 'inverse', 
+    'hidden', 'strikethrough'
+  ];
+  
+  // Background colors
+  const bgColors = colors.map(color => `bg${color.charAt(0).toUpperCase()}${color.slice(1)}`);
+  
+  // Add all colors as properties
+  [...colors, ...modifiers, ...bgColors].forEach(color => {
+    Object.defineProperty(chalk, color, {
+      get() {
+        return createChalkFunction(color);
+      }
+    });
+  });
+  
+  // Add standard methods
+  chalk.level = 1;
+  chalk.enabled = true;
+  chalk.visible = true;
+  
+  // Add other utility functions
+  chalk.supportsColor = {
+    hasBasic: true,
+    has256: true,
+    has16m: false
+  };
+  
+  chalk.rgb = () => createChalkFunction('rgb');
+  chalk.hex = () => createChalkFunction('hex');
+  chalk.bgRgb = () => createChalkFunction('bgRgb');
+  chalk.bgHex = () => createChalkFunction('bgHex');
+  
+  return chalk;
+}
 
-// Add methods for each color and style
-chalkMock.red = createColorFunction();
-chalkMock.green = createColorFunction();
-chalkMock.yellow = createColorFunction();
-chalkMock.blue = createColorFunction();
-chalkMock.magenta = createColorFunction();
-chalkMock.cyan = createColorFunction();
-chalkMock.white = createColorFunction();
-chalkMock.gray = createColorFunction();
-chalkMock.grey = createColorFunction();
-
-chalkMock.bold = createColorFunction();
-chalkMock.italic = createColorFunction();
-chalkMock.underline = createColorFunction();
-chalkMock.dim = createColorFunction();
-
-// Background colors
-chalkMock.bgRed = createColorFunction();
-chalkMock.bgGreen = createColorFunction();
-chalkMock.bgYellow = createColorFunction();
-chalkMock.bgBlue = createColorFunction();
-chalkMock.bgMagenta = createColorFunction();
-chalkMock.bgCyan = createColorFunction();
-chalkMock.bgWhite = createColorFunction();
-
-// Add visibility property
-chalkMock.visible = createColorFunction();
-
-// Export both default and named exports for compatibility
-export default chalkMock;
-export { chalkMock };
-
-// Expose individual methods for named imports
-export const {
-  red, green, yellow, blue, magenta, cyan, white, gray, grey,
-  bold, dim, italic, underline,
-  bgRed, bgGreen, bgYellow, bgBlue, bgMagenta, bgCyan, bgWhite,
-  visible
-} = chalkMock; 
+// Export chalk as default and named export
+const chalk = createChalk();
+export default chalk;
+export { chalk }; 
