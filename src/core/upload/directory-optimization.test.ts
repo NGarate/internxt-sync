@@ -9,7 +9,7 @@ import { expect, describe, beforeEach, spyOn, mock } from 'bun:test';
 import Uploader from './uploader';
 import { Verbosity } from '../../interfaces/logger';
 import * as logger from '../../utils/logger';
-import { skipIfSpyingIssues, createMockWebDAVService, createMockFileInfo } from '../../../test-config/bun-helpers';
+import { skipIfSpyingIssues, createMockWebDAVService, createMockFileInfo } from '../../../test-config/mocks/bun-helpers';
 
 describe('Directory Creation Optimization', () => {
   // Test data

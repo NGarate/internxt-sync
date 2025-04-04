@@ -6,7 +6,7 @@ import { expect, describe, beforeEach, spyOn } from 'bun:test';
 import Uploader from '../upload/uploader';
 import { Verbosity } from '../../interfaces/logger';
 import * as logger from '../../utils/logger';
-import { skipIfSpyingIssues, createMockWebDAVService, createMockFileScanner, createMockFileInfo } from '../../../test-config/bun-helpers';
+import { skipIfSpyingIssues, createMockWebDAVService, createMockFileScanner, createMockFileInfo } from '../../../test-config/mocks/bun-helpers';
 
 describe('Uploader', () => {
   // Test data
