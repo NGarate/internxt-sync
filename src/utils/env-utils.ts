@@ -12,12 +12,18 @@ const execAsync = promisify(exec);
 
 /**
  * Detect if running in Bun environment
+ * Uses global runtime flag or direct detection
  * @returns {boolean} True if running in Bun
  */
 export function isBunEnvironment() {
+  // Check for the global flag set by our universal entry point first
+  if (typeof globalThis.isBunRuntime !== 'undefined') {
+    return globalThis.isBunRuntime;
+  }
+  
+  // Fallback to direct runtime detection
   return typeof process !== 'undefined' && 
-         typeof process.versions !== 'undefined' && 
-         typeof process.versions.bun !== 'undefined';
+         typeof globalThis.Bun !== 'undefined';
 }
 
 /**

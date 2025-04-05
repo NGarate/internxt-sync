@@ -1,45 +1,56 @@
-#!/usr/bin/env node
-
-/**
- * WebDAV Backup - Command Line interface
- * 
- * This script detects the runtime environment and executes the appropriate version
- * of the tool based on whether it's running under Bun or Node.js.
+/*
+ * WebDAV Backup - Universal Entry Point
+ *
+ * This script auto-detects the runtime and adapts accordingly.
+ * Works on all platforms including Windows, Linux, and macOS.
+ * Supports being loaded directly or required as a module.
  */
 
-import { spawn } from 'child_process';
-import * as path from 'path';
-import { fileURLToPath } from 'url';
+// If this file is being required (like in our Windows wrapper), execute it
+if (typeof require !== 'undefined' && require.main !== module) {
+  // Being required as a module, export a function that starts the app
+  module.exports = runApp;
+} else {
+  // Being executed directly
+  runApp();
+}
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Main function to run the application 
+function runApp() {
+  // Check if we have Bun before trying to load anything
+  const isBun = typeof process !== 'undefined' && 
+                typeof globalThis.Bun !== 'undefined';
 
-// Try to execute with Bun first for better performance
-try {
-  const args = process.argv.slice(2);
-  const binPath = path.resolve(__dirname, 'bin.ts');
-  
-  // Attempt to launch using Bun runtime
-  const bunProcess = spawn('bun', [binPath, ...args], { 
-    stdio: 'inherit',
-    shell: process.platform === 'win32' // Use shell on Windows for better PATH resolution
-  });
-  
-  // Forward exit code
-  bunProcess.on('exit', (code) => {
-    process.exit(code || 0);
-  });
-  
-  // Handle errors (like Bun not being installed)
-  bunProcess.on('error', () => {
-    console.log('Bun not detected, falling back to Node.js...');
-    // Instead of trying to import directly, we'll execute the module using Node.js
-    import('./bin.ts').catch(err => {
-      console.error('Failed to start application:', err);
+  if (isBun) {
+    // Using Bun runtime - directly execute TypeScript
+    import('./src/main/file-sync.ts').catch(err => {
+      console.error('Failed to load Bun entry point:', err);
       process.exit(1);
     });
-  });
-} catch (error) {
-  console.error('Error launching application:', error);
-  process.exit(1);
+  } else {
+    // Using Node.js runtime - load compiled JavaScript
+    (async () => {
+      try {
+        const { fileURLToPath, pathToFileURL } = await import('url');
+        const path = await import('path');
+        
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+        
+        // Load the Node.js compatible version
+        const nodePath = path.join(__dirname, 'dist/node/file-sync.js');
+        const nodePathUrl = pathToFileURL(nodePath).href;
+        
+        // Set runtime flag
+        globalThis.isBunRuntime = false;
+        
+        // Import and execute
+        const { default: app } = await import(nodePathUrl);
+        app();
+      } catch (error) {
+        console.error("Failed to load Node.js entry point:", error);
+        process.exit(1);
+      }
+    })();
+  }
 } 

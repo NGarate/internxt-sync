@@ -1,8 +1,7 @@
-#!/usr/bin/env bun
 /**
  * WebDAV File Synchronization Tool - TypeScript Entry Point
  * 
- * Direct TypeScript version for use with Bun runtime for better performance
+ * This file works with both Bun and Node.js runtimes thanks to the universal entry point
  */
 
 import chalk from 'chalk';
@@ -19,10 +18,12 @@ import Uploader from '../core/upload/uploader';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Check if we're running with Bun to ensure best performance
-if (!isBunEnvironment()) {
-  console.warn(chalk.yellow("Note: For best performance, run this file with Bun instead of Node.js."));
-  console.warn(chalk.yellow("If you're using Node.js, consider using the universal entry point (index.js) instead."));
+// Check runtime environment and log appropriate message
+const isBun = isBunEnvironment();
+if (isBun) {
+  console.log(chalk.green("Running with Bun runtime - optimal performance enabled"));
+} else {
+  console.log(chalk.yellow("Running with Node.js runtime"));
 }
 
 /**

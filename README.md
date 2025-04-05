@@ -12,6 +12,12 @@ A simple, fast, and efficient tool for backing up files to a WebDAV server. This
 - Cross-platform support (Windows, macOS, Linux)
 - Intelligent runtime detection - works with either Node.js or Bun
 
+## Requirements
+
+- Either [Bun](https://bun.sh/) runtime ≥ 1.0.0
+- Or Node.js ≥ 18.0.0
+- A WebDAV server URL
+
 ## Installation
 
 ### Install with npm/yarn/pnpm
@@ -34,8 +40,10 @@ bun install -g webdav-backup
 
 This tool is designed to work with both Node.js and Bun runtimes:
 
-- **When installed with Bun**: Will automatically use the Bun runtime for optimal performance
-- **When installed with npm/yarn/pnpm**: Will attempt to use Bun if available, otherwise falls back to Node.js
+- **When using Bun**: The tool automatically uses Bun-optimized code paths for better performance
+- **When using Node.js**: The tool falls back to Node.js compatible code paths
+
+The binary automatically detects which runtime it's running in and uses the appropriate code. You don't need to have both runtimes installed - it works in Bun-only or Node.js-only environments.
 
 ## Usage
 
@@ -101,6 +109,22 @@ bun test  # or npm test
 bun run build
 ```
 
+## Troubleshooting
+
+### Running in Bun-only Environments
+
+The tool is designed to work in environments with only Bun installed. If you encounter any issues:
+
+1. Make sure you have Bun installed (`bun --version`)
+2. Try running the binary directly with Bun: `bun webdav-backup <args>` 
+
+### Running in Node.js-only Environments
+
+The tool also works in environments with only Node.js installed:
+
+1. Make sure you have Node.js v18+ installed (`node --version`)
+2. If needed, you can explicitly run with Node: `node webdav-backup <args>`
+
 ## Roadmap
 
 Future enhancements planned for this project include:
@@ -123,7 +147,7 @@ Future enhancements planned for this project include:
 
 5. **Authentication Improvements**
    - Better credential handling with secure storage
-   - Support for other authentication methods
+   - Support for OAuth and other authentication methods
 
 6. **Sync Capabilities**
    - Two-way synchronization between local and remote directories
@@ -134,6 +158,7 @@ Future enhancements planned for this project include:
    - Better memory usage for extremely large directories
 
 8. **User Experience**
+   - Interactive mode with prompts for missing options
    - Improved progress visualization
 
 ## License
