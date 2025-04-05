@@ -1,6 +1,6 @@
 {
   "name": "webdav-backup",
-  "version": "1.0.0",
+  "version": "0.2.5",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "dist/node/file-sync.js",
