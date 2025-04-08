@@ -1,6 +1,4 @@
-#!/bin/sh
-":" //# > /dev/null 2>&1; exec /usr/bin/env bun --bun "$0" "$@" || exec /usr/bin/env node "$0" "$@" || echo "Bun and Node.js are not installed. Please install one of them to run this script." >&2; exit 1 #
-#!/bin/sh
+#!/usr/bin/env sh
 ":" //# > /dev/null 2>&1; exec /usr/bin/env bun --bun "$0" "$@" || exec /usr/bin/env node "$0" "$@" || echo "Bun and Node.js are not installed. Please install one of them to run this script." >&2; exit 1 #
 
 /*
