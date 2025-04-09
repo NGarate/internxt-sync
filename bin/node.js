@@ -11,4 +11,4 @@ globalThis.isBunRuntime = false;
 
 // Import and execute the Node.js-specific version
 const { default: app } = await import(pathToFileURL(join(__dirname, '../dist/node/file-sync.js')).href);
-app(); 
+app();

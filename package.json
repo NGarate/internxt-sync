@@ -7,8 +7,7 @@
   "types": "dist/index.d.ts",
   "bin": {
     "webdav-backup": {
-      "bun": "./bin/bun.js",
-      "node": "./bin/node.js",
+      "bun": "./webdav-backup.bunx",
       "default": "./bin/node.js"
     }
   },
@@ -19,9 +18,7 @@
     }
   },
   "scripts": {
-    "start": "node bin.js",
-    "start:bun": "bun bin.js",
-    "start:windows": "bin.js",
+    "start": "bun bin.ts",
     "build": "bun run build:node && bun run build:bun && bun run postbuild",
     "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
     "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
@@ -47,10 +44,11 @@
   },
   "files": [
     "dist/**",
-    "bin.js",
     "bin/**",
+    "bin.js",
     "webdav-backup.cmd",
     "webdav-backup.ps1",
+    "webdav-backup.bunx",
     "README.md",
     "LICENSE"
   ],

@@ -13,7 +13,10 @@ import { fileURLToPath, pathToFileURL } from 'url';
 // Get current file information for path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const ROOT_DIR = path.resolve(__dirname, '..');
+
+// Use the current directory, not a parent directory
+// This resolves the issue with paths looking in the Desktop folder
+const ROOT_DIR = __dirname;
 
 // Detect if running in Bun
 const isBun = typeof process !== 'undefined' && 
@@ -38,7 +41,11 @@ async function main() {
       // Import the Bun-optimized version
       const bunEntryPath = path.join(ROOT_DIR, 'dist/bun/file-sync.js');
       console.log(`Loading Bun entry point: ${bunEntryPath}`);
-      await import(bunEntryPath);
+      
+      // Convert to URL for ESM compatibility
+      const bunEntryUrl = pathToFileURL(bunEntryPath).href;
+      const { default: app } = await import(bunEntryUrl);
+      app();
     } else {
       // Import the Node.js version with proper URL conversion for cross-platform compatibility
       const nodePath = path.join(ROOT_DIR, 'dist/node/file-sync.js');
@@ -46,7 +53,8 @@ async function main() {
       
       // Convert to file:// URL for Node.js ESM compatibility
       const nodePathUrl = pathToFileURL(nodePath).href;
-      await import(nodePathUrl);
+      const { default: app } = await import(nodePathUrl);
+      app();
     }
   } catch (error) {
     console.error("Error importing entry point:", error);

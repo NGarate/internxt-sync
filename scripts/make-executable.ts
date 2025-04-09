@@ -65,7 +65,13 @@ const windowsNodeWrapper = `@echo off
 node "%~dp0\\..\\bin\\node.js" %*
 `;
 
+// Bun's specialized .bunx file - extract content after the shebang to avoid duplication
+const bunWrapperContent = bunWrapper.replace(/^#!.*\n/, ''); 
+const bunxWrapper = `#!/usr/bin/env bun
+${bunWrapperContent}`;
+
 writeFileSync('webdav-backup.cmd', windowsBunWrapper);
 writeFileSync('webdav-backup.ps1', `bun "${join(process.cwd(), 'bin', 'bun.js')}" $args`);
+writeFileSync('webdav-backup.bunx', bunxWrapper);
 
 console.log('Binary setup completed!'); 

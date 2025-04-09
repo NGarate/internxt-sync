@@ -37,9 +37,20 @@ async function main() {
 
 // Execute if this is the main module
 if (typeof require !== 'undefined' && require.main === module || 
-    typeof import.meta !== 'undefined' && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch(err => {
-    console.error(err);
-    process.exit(1);
+    typeof import.meta !== 'undefined') {
+  // Import pathToFileURL in the outer scope to fix the reference error
+  import('url').then(({ pathToFileURL }) => {
+    if (import.meta.url === pathToFileURL(process.argv[1])?.href) {
+      main().catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
+    }
+  }).catch(() => {
+    // If import fails, just run main() anyway since we're likely the main module
+    main().catch(err => {
+      console.error(err);
+      process.exit(1);
+    });
   });
 } 
