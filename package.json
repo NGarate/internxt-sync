@@ -10,11 +10,20 @@
   "scripts": {
     "dev": "bun index.ts",
     "start": "bun index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "prepublishOnly": "bun test",
+    "prepare": "bun --bun test",
+    "preinstall": "echo 'Installing WebDAV Backup CLI...'",
+    "postinstall": "bun install.js"
   },
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "preferGlobal": true,
   "files": [
-    "src",
+    "src/**/*",
     "index.ts",
+    "install.js",
     "package.json",
     "README.md",
     "LICENSE"
@@ -30,9 +39,6 @@
   ],
   "author": "ngarate",
   "license": "MIT",
-  "engines": {
-    "bun": ">=1.0.0"
-  },
   "devDependencies": {
     "bun-types": "^1.2.8",
     "typescript": "^5.8.2"

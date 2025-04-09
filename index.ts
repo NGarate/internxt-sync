@@ -15,19 +15,71 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Dynamically import the file-sync module with proper path resolution
+async function loadSyncFilesModule() {
+  const possiblePaths = [
+    // Local development paths
+    "./src/main/file-sync.js",
+    "./src/main/file-sync.ts",
+    
+    // Global installation paths (relative to current script)
+    join(__dirname, "src/main/file-sync.js"),
+    join(__dirname, "src/main/file-sync.ts"),
+    
+    // Node/Bun modules resolution paths
+    join(__dirname, "node_modules/webdav-backup/src/main/file-sync.js"),
+    join(__dirname, "node_modules/webdav-backup/src/main/file-sync.ts"),
+    
+    // Absolute paths for debugging
+    resolve(__dirname, "src/main/file-sync.js"),
+    resolve(__dirname, "src/main/file-sync.ts")
+  ];
+  
+  console.log(chalk.blue("Looking for file-sync module..."));
+  
+  const errors = [];
+  
+  for (const path of possiblePaths) {
+    try {
+      console.log(chalk.gray(`Trying ${path}...`));
+      if (path.endsWith('.ts')) {
+        const module = await import(path);
+        console.log(chalk.green(`Successfully loaded ${path}`));
+        return module.default;
+      } else {
+        // For JS files, check if they exist first
+        if (existsSync(path)) {
+          const module = await import(path);
+          console.log(chalk.green(`Successfully loaded ${path}`));
+          return module.default;
+        } else {
+          errors.push(`File does not exist: ${path}`);
+        }
+      }
+    } catch (error) {
+      errors.push(`Error loading ${path}: ${error.message}`);
+    }
+  }
+  
+  console.error(chalk.red("Error: Could not find the file-sync module."));
+  console.error(chalk.yellow("This might be due to a global installation issue."));
+  console.error(chalk.gray("Detailed errors:"));
+  errors.forEach(err => console.error(chalk.gray(`- ${err}`)));
+  
+  console.error(chalk.yellow("\nPossible solutions:"));
+  console.error(chalk.yellow("1. Install locally instead of globally"));
+  console.error(chalk.yellow("2. Try running with: bun install -g . (from the project directory)"));
+  console.error(chalk.yellow("3. Clone the repository and run: cd /path/to/repo && sudo npm link"));
+  
+  process.exit(1);
+}
+
+// Load the sync files module
 let syncFiles;
 try {
-  // First try to import from the expected location
-  syncFiles = (await import("./src/main/file-sync.js")).default;
+  syncFiles = await loadSyncFilesModule();
 } catch (error) {
-  try {
-    // Try importing with .ts extension
-    syncFiles = (await import("./src/main/file-sync.ts")).default;
-  } catch (error) {
-    console.error(chalk.red("Error: Could not find the file-sync module."));
-    console.error(chalk.yellow("This might be due to a global installation issue."));
-    process.exit(1);
-  }
+  console.error(chalk.red(`Error loading file-sync module: ${error.message}`));
+  process.exit(1);
 }
 
 // Read version from package.json, with fallback

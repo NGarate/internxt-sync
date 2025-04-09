@@ -1,6 +1,6 @@
 # WebDAV Backup
 
-A simple, fast, and efficient tool for backing up files to a WebDAV server. Built with Bun for maximum performance.
+A simple, fast, and efficient tool for backing up files to a WebDAV server.
 
 ## Features
 
@@ -19,7 +19,7 @@ A simple, fast, and efficient tool for backing up files to a WebDAV server. Buil
 
 ## Installation
 
-### Install with Bun
+You can install WebDAV Backup globally using Bun:
 
 ```bash
 bun install -g webdav-backup
@@ -27,10 +27,8 @@ bun install -g webdav-backup
 
 ## Usage
 
-The basic command structure is:
-
 ```bash
-webdav-backup <source-dir> --webdav-url=<url> [options]
+webdav-backup <source-directory> --webdav-url=https://your-webdav-server.com/path
 ```
 
 ### Options
@@ -41,25 +39,25 @@ webdav-backup <source-dir> --webdav-url=<url> [options]
 - `--verbose` - Show detailed output including per-file operations
 - `--force` - Force upload all files regardless of whether they've changed
 - `--webdav-url=<url>` - WebDAV server URL (required)
-- `--help` - Show help message
-- `--version` - Show version information
+- `--help, -h` - Show help message
+- `--version, -v` - Show version information
 
 ### Examples
 
 ```bash
-# Upload files to a WebDAV server
+# Basic usage
 webdav-backup /path/to/files --webdav-url=https://example.com/webdav
 
-# Upload files with 4 concurrent uploads
+# With 4 concurrent uploads
 webdav-backup /path/to/files --cores=4 --webdav-url=https://example.com/webdav
 
-# Upload files to a specific target directory
+# To a specific target directory
 webdav-backup /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
 
-# Upload with minimal output
+# With minimal output
 webdav-backup /path/to/files --quiet --webdav-url=https://example.com/webdav
 
-# Force upload all files regardless of changes
+# Force upload all files
 webdav-backup /path/to/files --force --webdav-url=https://example.com/webdav
 ```
 
@@ -91,6 +89,29 @@ bun link
 ```
 
 ## Troubleshooting
+
+### Global Installation Issues
+
+If you encounter issues with the global installation, try one of these alternative methods:
+
+1. Install from the source directory:
+   ```bash
+   git clone https://github.com/yourusername/webdav-backup.git
+   cd webdav-backup
+   bun install -g .
+   ```
+
+2. Use `bunx` to run without installing:
+   ```bash
+   bunx webdav-backup --help
+   ```
+
+3. On Ubuntu/Linux, you might need to set up your PATH correctly:
+   ```bash
+   # Add this to your ~/.bashrc or ~/.zshrc
+   export BUN_INSTALL="$HOME/.bun"
+   export PATH="$BUN_INSTALL/bin:$PATH"
+   ```
 
 ### Running in Windows
 
