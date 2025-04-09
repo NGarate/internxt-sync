@@ -12,50 +12,26 @@ async function main() {
   const isBun = typeof process !== 'undefined' && 
                 typeof globalThis.Bun !== 'undefined';
 
-  if (isBun) {
-    // Using Bun runtime - directly execute TypeScript
-    try {
-      const { fileURLToPath, pathToFileURL } = await import('url');
-      const path = await import('path');
-      
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      
-      // Load the TypeScript file with proper path resolution
-      const tsPath = path.join(__dirname, 'src/main/file-sync.ts');
-      const tsPathUrl = pathToFileURL(tsPath).href;
-      
-      await import(tsPathUrl).catch(err => {
-        console.error('Failed to load Bun entry point:', err);
-        process.exit(1);
-      });
-    } catch (error) {
-      console.error('Failed to resolve paths:', error);
-      process.exit(1);
-    }
-  } else {
-    // Using Node.js runtime - load compiled JavaScript
-    try {
-      const { fileURLToPath, pathToFileURL } = await import('url');
-      const path = await import('path');
-      
-      const __filename = fileURLToPath(import.meta.url);
-      const __dirname = path.dirname(__filename);
-      
-      // Load the Node.js compatible version
-      const nodePath = path.join(__dirname, 'dist/node/file-sync.js');
-      const nodePathUrl = pathToFileURL(nodePath).href;
-      
-      // Set runtime flag
-      globalThis.isBunRuntime = false;
-      
-      // Import and execute
-      const { default: app } = await import(nodePathUrl);
-      app();
-    } catch (error) {
-      console.error("Failed to load Node.js entry point:", error);
-      process.exit(1);
-    }
+  try {
+    const { fileURLToPath, pathToFileURL } = await import('url');
+    const path = await import('path');
+    
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    
+    // Use the appropriate compiled version based on runtime
+    const jsPath = path.join(__dirname, isBun ? 'dist/bun/file-sync.js' : 'dist/node/file-sync.js');
+    const jsPathUrl = pathToFileURL(jsPath).href;
+    
+    // Set runtime flag
+    globalThis.isBunRuntime = isBun;
+    
+    // Import and execute
+    const { default: app } = await import(jsPathUrl);
+    app();
+  } catch (error) {
+    console.error("Failed to load application:", error);
+    process.exit(1);
   }
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "webdav-backup",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "dist/node/file-sync.js",
@@ -10,7 +10,7 @@
   },
   "exports": {
     "import": {
-      "bun": "./src/main/file-sync.ts",
+      "bun": "./dist/bun/file-sync.js",
       "default": "./dist/node/file-sync.js"
     }
   },
@@ -18,8 +18,9 @@
     "start": "node bin.js",
     "start:bun": "bun bin.js",
     "start:windows": "bin.js",
-    "build": "bun run build:node && bun run postbuild",
+    "build": "bun run build:node && bun run build:bun && bun run postbuild",
     "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
+    "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
     "postbuild": "bun run --bun scripts/make-executable.ts",
     "prepublishOnly": "bun run build",
     "clean": "bun run --bun scripts/clean.ts",
