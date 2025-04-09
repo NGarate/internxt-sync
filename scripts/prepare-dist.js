@@ -5,7 +5,7 @@
  */
 
 import { join } from "path";
-import { writeFile } from "fs/promises";
+import { writeFile, readFile } from "fs/promises";
 import { platform } from "os";
 
 const outputDir = "./dist";
@@ -18,6 +18,23 @@ async function prepareDistribution() {
     // Get package.json for version info
     const packageJson = await Bun.file("./package.json").json();
     const version = packageJson.version;
+    
+    // Read the built file
+    const builtContent = await readFile(outputFile, "utf-8");
+    
+    // Add shebang and version info
+    const executableContent = `#!/usr/bin/env bun
+/**
+ * webdav-backup v${version}
+ * A simple, fast CLI for backing up files to WebDAV servers
+ * https://github.com/ngarate/webdav-backup
+ */
+
+${builtContent}`;
+    
+    // Write the final executable file
+    await writeFile(outputFile, executableContent);
+    console.log(`Added shebang and version info to ${outputFile}`);
     
     // Make it executable on Unix-like systems
     if (platform() !== 'win32') {
