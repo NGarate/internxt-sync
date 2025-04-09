@@ -16,8 +16,10 @@
     "lib": ["ESNext"],
     "types": ["bun-types"],
     "paths": {
-      "*": ["./node_modules/*"]
-    }
+      "*": ["./node_modules/*"],
+      "#src/*": ["./src/*"]
+    },
+    "baseUrl": "."
   },
   "include": [
     "index.ts",
