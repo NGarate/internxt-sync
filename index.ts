@@ -6,28 +6,16 @@
 
 import { parseArgs } from "node:util";
 import { basename, dirname, resolve, join } from "node:path";
-import { readFileSync, existsSync } from "node:fs";
+import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 import { syncFiles } from "./src/main/file-sync";
 
-// Get the directory of the current file for proper path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Read version from package.json, with fallback
-let VERSION = "0.0.0";
-try {
-  const packageJsonPath = resolve(__dirname, "./package.json");
-  if (existsSync(packageJsonPath)) {
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-    VERSION = packageJson.version;
-  } else {
-    console.warn(chalk.yellow("Warning: Could not find package.json for version info."));
-  }
-} catch (error) {
-  console.warn(chalk.yellow("Warning: Could not read version from package.json."));
-}
+const packageJsonPath = resolve(__dirname, "./package.json");
+const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+const VERSION = packageJson.version;
 
 // Parse command line arguments
 function parse() {

@@ -1,6 +1,6 @@
 {
   "name": "webdav-backup",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "index.ts",
@@ -8,12 +8,10 @@
     "webdav-backup": "./index.ts"
   },
   "scripts": {
-    "dev": "bun index.ts",
     "start": "bun index.ts",
     "test": "bun test",
     "prepublishOnly": "bun test",
-    "prepare": "bun --bun test",
-    "postinstall": "bun -e \"import { install } from './install.js'; install();\""
+    "prepare": "bun --bun test"
   },
   "engines": {
     "bun": ">=1.0.0"
