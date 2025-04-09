@@ -1,1 +1,0 @@
-bun "C:\Users\noelg\OneDrive\Escritorio\internxt\bin\bun.js" $args

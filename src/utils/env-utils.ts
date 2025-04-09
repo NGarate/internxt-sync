@@ -1,37 +1,16 @@
-import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, UploadResult, DirectoryResult } from '../interfaces/webdav';
 /**
  * Environment utilities for the WebDAV Backup Tool
- * Handles detecting runtime environment and system capabilities
+ * Handles system capabilities for Bun runtime
  */
 
 import os from 'os';
-import { exec } from 'child_process';
-import { promisify } from 'util';
-
-const execAsync = promisify(exec);
-
-/**
- * Detect if running in Bun environment
- * Uses global runtime flag or direct detection
- * @returns {boolean} True if running in Bun
- */
-export function isBunEnvironment() {
-  // Check for the global flag set by our universal entry point first
-  if (typeof globalThis.isBunRuntime !== 'undefined') {
-    return globalThis.isBunRuntime;
-  }
-  
-  // Fallback to direct runtime detection
-  return typeof process !== 'undefined' && 
-         typeof globalThis.Bun !== 'undefined';
-}
 
 /**
  * Get the optimal number of concurrent uploads based on available CPU cores
  * @param {number} [userSpecified] - User specified number of cores (optional)
  * @returns {number} Optimal number of concurrent uploads
  */
-export function getOptimalConcurrency(userSpecified) {
+export function getOptimalConcurrency(userSpecified?: number): number {
   if (userSpecified && !isNaN(userSpecified) && userSpecified > 0) {
     return userSpecified;
   }
@@ -44,38 +23,23 @@ export function getOptimalConcurrency(userSpecified) {
 }
 
 /**
- * Check if a command is available in the path
- * @param {string} command - The command to check
- * @returns {Promise<boolean>} True if the command is available
- */
-export async function isCommandAvailable(command) {
-  try {
-    const checkCmd = process.platform === 'win32' 
-      ? `where ${command}`
-      : `which ${command}`;
-    
-    await execAsync(checkCmd);
-    return true;
-  } catch (error) {
-    return false;
-  }
-}
-
-/**
  * Get version information for runtime environment
  * @returns {Object} Object containing version information
  */
 export function getVersionInfo() {
-  const info = {
-    nodeVersion: process.version,
+  return {
+    bunVersion: Bun.version,
     platform: process.platform,
-    arch: process.arch,
-    isBun: isBunEnvironment()
+    arch: process.arch
   };
-  
-  if (info.isBun) {
-    info.bunVersion = process.versions.bun;
-  }
-  
-  return info;
+}
+
+/**
+ * Detects if the current runtime environment is Bun
+ * @returns {boolean} true if running in Bun, false if running in Node.js
+ */
+export function isBunEnvironment(): boolean {
+  return typeof process !== 'undefined' && 
+    typeof process.versions !== 'undefined' && 
+    typeof process.versions.bun !== 'undefined';
 } 

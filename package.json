@@ -3,31 +3,20 @@
   "version": "0.2.11",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
-  "main": "dist/node/file-sync.js",
-  "types": "dist/index.d.ts",
+  "main": "index.ts",
   "bin": {
-    "webdav-backup": {
-      "bun": "./webdav-backup.bunx",
-      "default": "./bin/node.js"
-    }
-  },
-  "exports": {
-    "import": {
-      "bun": "./dist/bun/file-sync.js",
-      "default": "./dist/node/file-sync.js"
-    }
+    "webdav-backup": "./index.ts"
   },
   "scripts": {
-    "start": "bun bin.ts",
-    "build": "bun run build:node && bun run build:bun && bun run postbuild",
-    "build:node": "bun build src/main/file-sync.ts --outdir dist/node --target node --format esm",
-    "build:bun": "bun build src/main/file-sync.ts --outdir dist/bun --target bun --format esm",
-    "postbuild": "bun run --bun scripts/make-executable.ts",
-    "prepublishOnly": "bun run build",
-    "clean": "bun run --bun scripts/clean.ts",
-    "test": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts",
-    "test:coverage": "bun test --tsconfig-override test-config/tsconfig.test.json --preload ./test-config/setup.ts --coverage"
+    "dev": "bun index.ts",
+    "start": "bun index.ts"
   },
+  "files": [
+    "src",
+    "index.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "keywords": [
     "webdav",
     "upload",
@@ -40,20 +29,9 @@
   "author": "ngarate",
   "license": "MIT",
   "engines": {
-    "node": ">=18.0.0"
+    "bun": ">=1.0.0"
   },
-  "files": [
-    "dist/**",
-    "bin/**",
-    "bin.js",
-    "webdav-backup.cmd",
-    "webdav-backup.ps1",
-    "webdav-backup.bunx",
-    "README.md",
-    "LICENSE"
-  ],
   "devDependencies": {
-    "@types/node": "^22.14.0",
     "bun-types": "^1.2.8",
     "typescript": "^5.8.2"
   },

@@ -1,154 +1,137 @@
-#!/usr/bin/env node
-
+#!/usr/bin/env bun
 /**
- * Universal Entry Point for WebDAV Sync
- * 
- * This file automatically detects the runtime environment and runs the appropriate version:
- * - In Bun: Directly runs the TypeScript file for maximum performance
- * - In Node.js: Runs the pre-compiled JavaScript version
- * 
- * The detection and execution are transparent to the end user.
+ * webdav-backup CLI
+ * A simple, fast CLI for backing up files to WebDAV servers
  */
 
-import { fileURLToPath } from 'url';
-import path from 'path';
-import fs from 'fs';
-import { execSync, spawn, ChildProcess } from 'child_process';
+import { parseArgs } from "node:util";
+import { basename } from "node:path";
+import { readFileSync } from "node:fs";
+import chalk from "chalk";
 
-// Get the directory name for ES modules
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Import the main file sync functionality 
+import syncFiles from "./src/main/file-sync";
 
-// ANSI color codes for better terminal output
-const colors = {
-  blue: '\x1b[34m',
-  green: '\x1b[32m',
-  yellow: '\x1b[33m',
-  red: '\x1b[31m',
-  reset: '\x1b[0m'
-};
+// Read version from package.json
+const { version: VERSION } = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url))
+);
 
-// Check if we're running in Bun
-const isBunRuntime = typeof process !== 'undefined' && 
-                     typeof process.versions !== 'undefined' && 
-                     'bun' in process.versions;
+// Parse command line arguments
+function parse() {
+  const { values, positionals } = parseArgs({
+    args: Bun.argv.slice(2),
+    options: {
+      // Core options
+      "cores": { type: "string" },
+      "target": { type: "string" },
+      "quiet": { type: "boolean" },
+      "verbose": { type: "boolean" },
+      "force": { type: "boolean" },
+      "webdav-url": { type: "string" },
+      
+      // Help and version
+      "help": { type: "boolean", short: "h" },
+      "version": { type: "boolean", short: "v" }
+    },
+    allowPositionals: true
+  });
 
-// Check if Bun is installed (even if we're not running in it)
-function isBunAvailable(): boolean {
-  try {
-    execSync('bun --version', { stdio: 'ignore' });
-    return true;
-  } catch (error) {
-    return false;
-  }
+  return {
+    ...values,
+    sourceDir: positionals[0]
+  };
 }
 
-// Main function to run the appropriate version
-async function main(): Promise<void> {
-  const args = process.argv.slice(2);
-  const tsFile = path.join(__dirname, 'src', 'main', 'file-sync.ts');
-  const jsFile = path.join(__dirname, 'dist', 'file-sync.js');
+// Display help information
+function showHelp() {
+  const runtime = typeof Bun !== 'undefined' ? 'bun' : 'node';
   
+  console.log(`
+${chalk.bold(`Usage: ${runtime} webdav-backup <source-dir> [options]`)}
+
+${chalk.bold("Options:")}
+  --cores=<number>   Number of concurrent uploads (default: 2/3 of CPU cores)
+  --target=<path>    Target directory on the WebDAV server (default: root directory)
+  --quiet            Show minimal output (only errors and the progress bar)
+  --verbose          Show detailed output including per-file operations
+  --force            Force upload all files regardless of whether they've changed
+  --webdav-url=<url> WebDAV server URL (required)
+  --help, -h         Show this help message
+  --version, -v      Show version information
+
+${chalk.bold("Examples:")}
+  webdav-backup /path/to/files --webdav-url=https://example.com/webdav
+  webdav-backup /path/to/files --cores=4 --webdav-url=https://example.com/webdav
+  webdav-backup /path/to/files --target=backup/daily --webdav-url=https://example.com/webdav
+  webdav-backup /path/to/files --quiet --webdav-url=https://example.com/webdav
+  webdav-backup /path/to/files --force --webdav-url=https://example.com/webdav
+`);
+}
+
+// Show version information
+function showVersion() {
+  console.log(`webdav-backup v${VERSION}`);
+}
+
+// Main function
+async function main() {
   try {
-    // CASE 1: Running in Bun - use TypeScript directly
-    if (isBunRuntime) {
-      if (fs.existsSync(tsFile)) {
-        try {
-          const module = await import('./src/main/file-sync.ts');
-          if (typeof module.default === 'function') {
-            return module.default();
-          } else {
-            throw new Error('TypeScript module does not export a default function');
-          }
-        } catch (error: any) {
-          console.error(`${colors.red}Error running TypeScript directly: ${error.message}${colors.reset}`);
-          // Fall back to JS if TS fails
-          if (fs.existsSync(jsFile)) {
-            console.log(`${colors.yellow}Falling back to JavaScript version...${colors.reset}`);
-            return runJavaScriptVersion();
-          }
-          throw error;
-        }
-      }
+    // Parse CLI arguments
+    const args = parse();
+    
+    // Show version info if requested
+    if (args.version) {
+      showVersion();
+      process.exit(0);
     }
     
-    // CASE 2: Not in Bun runtime but Bun is available - spawn Bun process
-    if (!isBunRuntime && isBunAvailable() && fs.existsSync(tsFile)) {
-      console.log(`${colors.blue}Bun detected, using it to run TypeScript directly...${colors.reset}`);
-      
-      return new Promise((resolve, reject) => {
-        const bunProcess: ChildProcess = spawn('bun', [tsFile, ...args], {
-          stdio: 'inherit',
-          cwd: __dirname
-        });
-        
-        bunProcess.on('close', (code) => {
-          if (code === 0) {
-            resolve();
-          } else {
-            // If Bun execution fails, try JavaScript version
-            if (fs.existsSync(jsFile)) {
-              console.log(`${colors.yellow}Bun execution failed, falling back to JavaScript...${colors.reset}`);
-              runJavaScriptVersion().then(resolve).catch(reject);
-            } else {
-              reject(new Error(`Process exited with code ${code}`));
-            }
-          }
-        });
-      });
+    // Show help if requested
+    if (args.help) {
+      showHelp();
+      process.exit(0);
     }
     
-    // CASE 3: Default - run JavaScript version
-    return runJavaScriptVersion();
+    // Check for required source directory
+    if (!args.sourceDir) {
+      console.error(chalk.red("Error: Source directory is required"));
+      console.log(); // Add empty line for better readability
+      showHelp();
+      process.exit(1);
+    }
     
-  } catch (error: any) {
-    console.error(`${colors.red}Error running application: ${error.message}${colors.reset}`);
+    // Check for required webdav-url
+    if (!args["webdav-url"]) {
+      console.error(chalk.red("Error: --webdav-url is required"));
+      console.log(); // Add empty line for better readability
+      showHelp();
+      process.exit(1);
+    }
+    
+    // Run the main sync function with the parsed arguments
+    await syncFiles(args.sourceDir, {
+      cores: args.cores ? parseInt(args.cores) : undefined,
+      target: args.target,
+      quiet: args.quiet,
+      verbose: args.verbose,
+      force: args.force,
+      webdavUrl: args["webdav-url"]
+    });
+    
+  } catch (error) {
+    console.error(chalk.red(`Error: ${error.message}`));
+    console.log(); // Add empty line for better readability
+    showHelp();
     process.exit(1);
   }
 }
 
-// Helper function to run the JavaScript version
-async function runJavaScriptVersion(): Promise<void> {
-  const jsFile = path.join(__dirname, 'dist', 'file-sync.js');
-  
-  if (fs.existsSync(jsFile)) {
-    try {
-      const module = await import('./dist/file-sync.js');
-      if (typeof module.default === 'function') {
-        return module.default();
-      } else {
-        throw new Error('JavaScript module does not export a default function');
-      }
-    } catch (error: any) {
-      console.error(`${colors.red}Error importing JavaScript module: ${error.message}${colors.reset}`);
-      throw error;
-    }
-  } else {
-    // If JS file doesn't exist, try to build it if we have Bun
-    if (isBunAvailable() && fs.existsSync(path.join(__dirname, 'src', 'main', 'file-sync.ts'))) {
-      console.log(`${colors.yellow}JavaScript version not found, attempting to build it...${colors.reset}`);
-      
-      try {
-        execSync('bun build src/main/file-sync.ts --outdir dist --target node --external chalk,webdav', {
-          stdio: 'inherit',
-          cwd: __dirname
-        });
-        
-        if (fs.existsSync(jsFile)) {
-          console.log(`${colors.green}Build successful, running JavaScript version...${colors.reset}`);
-          return runJavaScriptVersion();
-        }
-      } catch (buildError: any) {
-        console.error(`${colors.red}Failed to build JavaScript version: ${buildError.message}${colors.reset}`);
-      }
-    }
-    
-    throw new Error('Could not find or build a runnable version of the application');
-  }
-}
-
-// Run the application
-main().catch(error => {
-  console.error(`${colors.red}Fatal error: ${error.message}${colors.reset}`);
-  process.exit(1);
-}); 
+// Run the main function when this file is executed directly
+if (import.meta.main) {
+  main().catch(err => {
+    console.error(chalk.red(`Error: ${err.message}`));
+    console.log(); // Add empty line for better readability
+    showHelp();
+    process.exit(1);
+  });
+} 

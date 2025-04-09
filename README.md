@@ -1,6 +1,6 @@
 # WebDAV Backup
 
-A simple, fast, and efficient tool for backing up files to a WebDAV server. This tool works with both Node.js and Bun runtimes, with enhanced performance when using Bun.
+A simple, fast, and efficient tool for backing up files to a WebDAV server. Built with Bun for maximum performance.
 
 ## Features
 
@@ -10,40 +10,20 @@ A simple, fast, and efficient tool for backing up files to a WebDAV server. This
 - Directory structure preservation
 - Target directory specification
 - Cross-platform support (Windows, macOS, Linux)
-- Intelligent runtime detection - works with either Node.js or Bun
+- Native Bun performance optimizations
 
 ## Requirements
 
-- Either [Bun](https://bun.sh/) runtime ≥ 1.0.0
-- Or Node.js ≥ 18.0.0
+- [Bun](https://bun.sh/) runtime ≥ 1.0.0
 - A WebDAV server URL
 
 ## Installation
 
-### Install with npm/yarn/pnpm
-
-```bash
-npm install -g webdav-backup
-# or
-yarn global add webdav-backup
-# or
-pnpm add -g webdav-backup
-```
-
-### Install with Bun (recommended for best performance)
+### Install with Bun
 
 ```bash
 bun install -g webdav-backup
 ```
-
-## Runtime Support
-
-This tool is designed to work with both Node.js and Bun runtimes:
-
-- **When using Bun**: The tool automatically uses Bun-optimized code paths for better performance
-- **When using Node.js**: The tool falls back to Node.js compatible code paths
-
-The binary automatically detects which runtime it's running in and uses the appropriate code. You don't need to have both runtimes installed - it works in Bun-only or Node.js-only environments.
 
 ## Usage
 
@@ -62,6 +42,7 @@ webdav-backup <source-dir> --webdav-url=<url> [options]
 - `--force` - Force upload all files regardless of whether they've changed
 - `--webdav-url=<url>` - WebDAV server URL (required)
 - `--help` - Show help message
+- `--version` - Show version information
 
 ### Examples
 
@@ -88,7 +69,7 @@ webdav-backup /path/to/files --force --webdav-url=https://example.com/webdav
 2. It uploads files that have changed since the last run
 3. Directory structures are created automatically on the WebDAV server
 4. Progress is displayed with a visual progress bar
-5. The tool automatically detects whether it's running in Node.js or Bun environment
+5. Optimized for Bun's performance capabilities
 
 ## For Developers
 
@@ -100,30 +81,23 @@ git clone https://github.com/yourusername/webdav-backup.git
 cd webdav-backup
 
 # Install dependencies
-bun install  # or npm install
+bun install
 
-# Run tests
-bun test  # or npm test
+# Run the tool during development
+bun dev
 
-# Build the project
-bun run build
+# Install locally for testing
+bun link
 ```
 
 ## Troubleshooting
 
-### Running in Bun-only Environments
+### Running in Windows
 
-The tool is designed to work in environments with only Bun installed. If you encounter any issues:
+Bun has full Windows support. If you encounter any issues:
 
 1. Make sure you have Bun installed (`bun --version`)
-2. Try running the binary directly with Bun: `bun webdav-backup <args>` 
-
-### Running in Node.js-only Environments
-
-The tool also works in environments with only Node.js installed:
-
-1. Make sure you have Node.js v18+ installed (`node --version`)
-2. If needed, you can explicitly run with Node: `node webdav-backup <args>`
+2. Try running with full paths: `bun /path/to/webdav-backup <args>`
 
 ## Roadmap
 
