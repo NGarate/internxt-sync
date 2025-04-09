@@ -9,11 +9,13 @@
   },
   "scripts": {
     "dev": "bun index.ts",
-    "start": "bun index.ts"
+    "start": "bun index.ts",
+    "test": "bun test"
   },
   "files": [
     "src",
     "index.ts",
+    "package.json",
     "README.md",
     "LICENSE"
   ],

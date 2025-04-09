@@ -5,17 +5,44 @@
  */
 
 import { parseArgs } from "node:util";
-import { basename } from "node:path";
-import { readFileSync } from "node:fs";
+import { basename, dirname, resolve, join } from "node:path";
+import { readFileSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import chalk from "chalk";
 
-// Import the main file sync functionality 
-import syncFiles from "./src/main/file-sync";
+// Get the directory of the current file for proper path resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-// Read version from package.json
-const { version: VERSION } = JSON.parse(
-  readFileSync(new URL('./package.json', import.meta.url))
-);
+// Dynamically import the file-sync module with proper path resolution
+let syncFiles;
+try {
+  // First try to import from the expected location
+  syncFiles = (await import("./src/main/file-sync.js")).default;
+} catch (error) {
+  try {
+    // Try importing with .ts extension
+    syncFiles = (await import("./src/main/file-sync.ts")).default;
+  } catch (error) {
+    console.error(chalk.red("Error: Could not find the file-sync module."));
+    console.error(chalk.yellow("This might be due to a global installation issue."));
+    process.exit(1);
+  }
+}
+
+// Read version from package.json, with fallback
+let VERSION = "0.0.0";
+try {
+  const packageJsonPath = resolve(__dirname, "./package.json");
+  if (existsSync(packageJsonPath)) {
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
+    VERSION = packageJson.version;
+  } else {
+    console.warn(chalk.yellow("Warning: Could not find package.json for version info."));
+  }
+} catch (error) {
+  console.warn(chalk.yellow("Warning: Could not read version from package.json."));
+}
 
 // Parse command line arguments
 function parse() {

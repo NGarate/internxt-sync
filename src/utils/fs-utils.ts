@@ -4,10 +4,10 @@ import { WebDAVConnectivityOptions, WebDAVServiceOptions, WebDAVClientOptions, U
  * Handles file operations, checksums, and path manipulations
  */
 
-import fs from 'fs';
-import path from 'path';
-import crypto from 'crypto';
-import { promisify } from 'util';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { promisify } from 'node:util';
 
 // Promisified functions
 export const existsAsync = promisify(fs.exists);
