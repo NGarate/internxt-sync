@@ -5,84 +5,17 @@
  */
 
 import { parseArgs } from "node:util";
-import { basename, dirname, resolve, join } from "node:path";
-import { readFileSync, existsSync } from "node:fs";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 import chalk from "chalk";
 
-// Get the directory of the current file for proper path resolution
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+// Import the syncFiles function
+// In a development environment, Bun transpiles this directly
+// In production, it's bundled correctly by the bun build command
+import { syncFiles } from "./src/main/file-sync";
 
-// Read version from package.json, with fallback
-const packageJsonPath = resolve(__dirname, "./package.json");
-const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-const VERSION = packageJson.version;
-
-// Try to import the syncFiles function with different path strategies
-async function importSyncModule() {
-  const possiblePaths = [
-    // Using import maps (preferred for newer Node.js/Bun versions)
-    "#src/main/file-sync",
-    // Standard relative path for local development
-    "./src/main/file-sync",
-    // Absolute path based on the current file's location
-    join(__dirname, "src/main/file-sync"),
-    // For npm/bun global installations
-    join(__dirname, "../src/main/file-sync"),
-    // For npm global installations with package name
-    join(__dirname, "../webdav-backup/src/main/file-sync")
-  ];
-  
-  let error;
-  for (const path of possiblePaths) {
-    try {
-      console.log(`Trying to import from: ${path}`);
-      const module = await import(path);
-      console.log(`Successfully imported from: ${path}`);
-      return module.syncFiles;
-    } catch (err) {
-      error = err;
-      console.log(`Import failed from ${path}: ${err.message}`);
-      
-      // Special handling for the first failure to help diagnose the issue
-      if (path === possiblePaths[0]) {
-        try {
-          console.log("Current directory:", process.cwd());
-          console.log("Script directory:", __dirname);
-          
-          // Try to list the src directory if it exists
-          const srcDir = join(__dirname, "src");
-          if (existsSync(srcDir)) {
-            console.log(`src directory exists at ${srcDir}`);
-            const mainDir = join(srcDir, "main");
-            if (existsSync(mainDir)) {
-              console.log(`main directory exists at ${mainDir}`);
-              const fileSyncPath = join(mainDir, "file-sync.ts");
-              if (existsSync(fileSyncPath)) {
-                console.log(`file-sync.ts exists at ${fileSyncPath}`);
-              } else {
-                console.log(`file-sync.ts does not exist at ${fileSyncPath}`);
-              }
-            } else {
-              console.log(`main directory does not exist at ${mainDir}`);
-            }
-          } else {
-            console.log(`src directory does not exist at ${srcDir}`);
-          }
-        } catch (diagError) {
-          console.log(`Diagnostics error: ${diagError.message}`);
-        }
-      }
-    }
-  }
-  
-  // If we get here, all import attempts failed
-  console.error(chalk.red(`Failed to import sync module: ${error.message}`));
-  console.error(chalk.yellow("This is likely an installation or path resolution issue."));
-  console.error(chalk.yellow("Please try reinstalling the package with: bun install -g webdav-backup"));
-  return null;
-}
+// Get version from package.json using Bun's built-in functionality
+const packageJson = await Bun.file("package.json").json();
+const VERSION = packageJson.version || "unknown";
 
 // Parse command line arguments
 function parse() {
@@ -113,6 +46,8 @@ function parse() {
 // Display help information
 function showHelp() {  
   console.log(`
+${chalk.bold(`WebDAV Backup v${VERSION} - A simple CLI for backing up files to WebDAV servers`)}
+
 ${chalk.bold(`Usage: webdav-backup <source-dir> [options]`)}
 
 ${chalk.bold("Options:")}
@@ -143,43 +78,33 @@ function showVersion() {
 async function main() {
   try {
     // Check if help or version flags are present before parsing other arguments
-    // This allows these flags to work without other required arguments
     const rawArgs = Bun.argv.slice(2);
     
-    // Check for help flag first (highest priority)
+    // Check for help flag first
     if (rawArgs.includes("--help") || rawArgs.includes("-h")) {
       showHelp();
       process.exit(0);
-      return; // For TypeScript to understand the flow
     }
     
-    // Check for version flag second (second priority)
+    // Check for version flag
     if (rawArgs.includes("--version") || rawArgs.includes("-v")) {
       showVersion();
       process.exit(0);
-      return; // For TypeScript to understand the flow
     }
     
     // Show help when no arguments are provided
     if (rawArgs.length === 0) {
       showHelp();
       process.exit(0);
-      return;
     }
     
-    // Import the syncFiles function dynamically
-    const syncFiles = await importSyncModule();
-    if (!syncFiles) {
-      process.exit(1);
-    }
-    
-    // Parse CLI arguments for other commands
+    // Parse CLI arguments
     const args = parse();
     
     // Check for required source directory
     if (!args.sourceDir) {
       console.error(chalk.red("Error: Source directory is required"));
-      console.log(); // Add empty line for better readability
+      console.log();
       showHelp();
       process.exit(1);
     }
@@ -187,7 +112,7 @@ async function main() {
     // Check for required webdav-url
     if (!args["webdav-url"]) {
       console.error(chalk.red("Error: --webdav-url is required"));
-      console.log(); // Add empty line for better readability
+      console.log();
       showHelp();
       process.exit(1);
     }
@@ -204,17 +129,17 @@ async function main() {
     
   } catch (error) {
     console.error(chalk.red(`Error: ${error.message}`));
-    console.log(); // Add empty line for better readability
+    console.log();
     showHelp();
     process.exit(1);
   }
 }
 
-// Run the main function when this file is executed directly
+// Run the main function
 if (import.meta.main) {
   main().catch(err => {
     console.error(chalk.red(`Error: ${err.message}`));
-    console.log(); // Add empty line for better readability
+    console.log();
     showHelp();
     process.exit(1);
   });

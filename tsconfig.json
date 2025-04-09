@@ -1,8 +1,10 @@
 {
   "compilerOptions": {
+    "lib": ["ESNext"],
     "target": "esnext",
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
+    "moduleDetection": "force",
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
@@ -13,7 +15,6 @@
     "allowJs": true,
     "checkJs": false,
     "resolveJsonModule": true,
-    "lib": ["ESNext"],
     "types": ["bun-types"],
     "paths": {
       "*": ["./node_modules/*"],
