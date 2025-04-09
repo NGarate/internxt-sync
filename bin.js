@@ -14,10 +14,25 @@ async function main() {
 
   if (isBun) {
     // Using Bun runtime - directly execute TypeScript
-    await import('./src/main/file-sync.ts').catch(err => {
-      console.error('Failed to load Bun entry point:', err);
+    try {
+      const { fileURLToPath, pathToFileURL } = await import('url');
+      const path = await import('path');
+      
+      const __filename = fileURLToPath(import.meta.url);
+      const __dirname = path.dirname(__filename);
+      
+      // Load the TypeScript file with proper path resolution
+      const tsPath = path.join(__dirname, 'src/main/file-sync.ts');
+      const tsPathUrl = pathToFileURL(tsPath).href;
+      
+      await import(tsPathUrl).catch(err => {
+        console.error('Failed to load Bun entry point:', err);
+        process.exit(1);
+      });
+    } catch (error) {
+      console.error('Failed to resolve paths:', error);
       process.exit(1);
-    });
+    }
   } else {
     // Using Node.js runtime - load compiled JavaScript
     try {
