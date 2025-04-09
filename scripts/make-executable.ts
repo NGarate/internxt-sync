@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
 
-import fs from 'fs';
-import path from 'path';
-import { execSync } from 'child_process';
+import { writeFileSync, chmodSync } from 'fs';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 /**
  * Make bin.js executable
@@ -13,43 +13,63 @@ import { execSync } from 'child_process';
 const rootDir = process.cwd();
 const binPath = path.join(rootDir, 'bin.js');
 
-// Universal polyglot shebang that works across shells and runtimes
-const universalShebang = `#!/bin/sh
-":" //# > /dev/null 2>&1; exec /usr/bin/env bun --bun "$0" "$@" || exec /usr/bin/env node "$0" "$@" || echo "Bun and Node.js are not installed. Please install one of them to run this script." >&2; exit 1 #`;
+// Create the bin directory if it doesn't exist
+const binDir = join(rootDir, 'bin');
+if (!existsSync(binDir)) {
+  mkdirSync(binDir, { recursive: true });
+}
 
-try {
-  console.log(`Making executable: ${binPath}`);
+// Create Bun wrapper
+const bunWrapper = `#!/usr/bin/env bun
 
-  // Update shebang in bin.js if needed
-  let content = fs.readFileSync(binPath, 'utf-8');
-  if (!content.startsWith(universalShebang)) {
-    content = `${universalShebang}\n${content.replace(/^#!.*\n/, '')}`;
-    fs.writeFileSync(binPath, content);
-    console.log('Updated with universal shebang');
-  }
+import { fileURLToPath, pathToFileURL } from 'url';
+import { dirname, join } from 'path';
 
-  // For Unix systems (macOS, Linux): Set executable permissions 
-  // This does nothing on Windows but won't cause errors
-  try {
-    // Try using chmod directly
-    fs.chmodSync(binPath, 0o755); // rwxr-xr-x
-    console.log('Set executable permissions on bin.js');
-  } catch (err) {
-    console.log('Could not set permissions with fs.chmod, trying with execSync');
-    
-    // Fall back to exec on platforms where fs.chmod might not work as expected
-    try {
-      execSync(`chmod +x "${binPath}"`, { stdio: 'ignore' });
-      console.log('Set executable permissions using chmod command');
-    } catch (execErr) {
-      // On Windows, this will fail but it's expected
-      console.log('Could not run chmod command (expected on Windows)');
-    }
-  }
-  
-  console.log('Binary setup complete');
-} catch (error) {
-  console.error('Error setting up binary:', error);
-  // Don't exit with error since this might be running on Windows
-  // where chmod isn't available
-} 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Set runtime flag
+globalThis.isBunRuntime = true;
+
+// Import and execute the Bun-specific version
+const { default: app } = await import(pathToFileURL(join(__dirname, '../dist/bun/file-sync.js')).href);
+app();
+`;
+
+// Create Node.js wrapper
+const nodeWrapper = `#!/usr/bin/env node
+
+import { fileURLToPath, pathToFileURL } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Set runtime flag
+globalThis.isBunRuntime = false;
+
+// Import and execute the Node.js-specific version
+const { default: app } = await import(pathToFileURL(join(__dirname, '../dist/node/file-sync.js')).href);
+app();
+`;
+
+// Write and make executable both wrappers
+writeFileSync(join(binDir, 'bun.js'), bunWrapper);
+writeFileSync(join(binDir, 'node.js'), nodeWrapper);
+
+// Make them executable
+chmodSync(join(binDir, 'bun.js'), 0o755);
+chmodSync(join(binDir, 'node.js'), 0o755);
+
+// Create Windows wrappers
+const windowsBunWrapper = `@echo off
+bun "%~dp0\\..\\bin\\bun.js" %*
+`;
+const windowsNodeWrapper = `@echo off
+node "%~dp0\\..\\bin\\node.js" %*
+`;
+
+writeFileSync('webdav-backup.cmd', windowsBunWrapper);
+writeFileSync('webdav-backup.ps1', `bun "${join(process.cwd(), 'bin', 'bun.js')}" $args`);
+
+console.log('Binary setup completed!'); 
