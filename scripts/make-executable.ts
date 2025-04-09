@@ -1,8 +1,7 @@
 #!/usr/bin/env bun
 
-import { writeFileSync, chmodSync } from 'fs';
+import { writeFileSync, chmodSync, existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
 
 /**
  * Make bin.js executable
@@ -10,11 +9,8 @@ import { existsSync, mkdirSync } from 'fs';
  * that works across all platforms and shells
  */
 
-const rootDir = process.cwd();
-const binPath = path.join(rootDir, 'bin.js');
-
 // Create the bin directory if it doesn't exist
-const binDir = join(rootDir, 'bin');
+const binDir = join(process.cwd(), 'bin');
 if (!existsSync(binDir)) {
   mkdirSync(binDir, { recursive: true });
 }
