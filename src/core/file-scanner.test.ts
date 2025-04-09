@@ -13,6 +13,7 @@ import * as fsUtils from '../utils/fs-utils';
 import * as logger from '../utils/logger';
 import fs from 'fs';
 import path from 'path';
+import os from 'os';
 import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner';
 
 describe('FileScanner', () => {
@@ -51,7 +52,8 @@ describe('FileScanner', () => {
     
     expect(scanner.sourceDir).toBe('/resolved/test/dir');
     expect(scanner.verbosity).toBe(1);
-    expect(scanner.statePath).toContain('.webdav-backup-state.json');
+    // Check that the state path is in the temp directory
+    expect(scanner.statePath).toBe(path.join(os.tmpdir(), 'webdav-backup-state.json'));
     
     // Restore original path.resolve
     path.resolve = originalResolve;
@@ -65,7 +67,8 @@ describe('FileScanner', () => {
     await scanner.loadState();
     
     expect(fsUtils.loadJsonFromFile).toHaveBeenCalledTimes(1);
-    expect(scanner.statePath).toContain('.webdav-backup-state.json');
+    // Verify that it loads from the temp directory
+    expect(scanner.statePath).toBe(path.join(os.tmpdir(), 'webdav-backup-state.json'));
   });
   
   // Test saveState
@@ -122,7 +125,7 @@ describe('FileScanner', () => {
     const files = await scanner.scanDirectory('/test/dir');
     
     // Should have two files (file1.txt from root, file2.txt from subdir)
-    // Hidden files and the state file should be skipped
+    // Hidden files should be skipped, but we no longer need to check for the state file
     expect(files.length).toBe(2);
     expect(files[0].checksum).toBe('test-checksum');
     expect(files[0].size).toBe(1024);

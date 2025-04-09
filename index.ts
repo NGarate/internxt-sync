@@ -9,78 +9,11 @@ import { basename, dirname, resolve, join } from "node:path";
 import { readFileSync, existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import chalk from "chalk";
+import { syncFiles } from "./src/main/file-sync";
 
 // Get the directory of the current file for proper path resolution
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Dynamically import the file-sync module with proper path resolution
-async function loadSyncFilesModule() {
-  const possiblePaths = [
-    // Local development paths
-    "./src/main/file-sync.js",
-    "./src/main/file-sync.ts",
-    
-    // Global installation paths (relative to current script)
-    join(__dirname, "src/main/file-sync.js"),
-    join(__dirname, "src/main/file-sync.ts"),
-    
-    // Node/Bun modules resolution paths
-    join(__dirname, "node_modules/webdav-backup/src/main/file-sync.js"),
-    join(__dirname, "node_modules/webdav-backup/src/main/file-sync.ts"),
-    
-    // Absolute paths for debugging
-    resolve(__dirname, "src/main/file-sync.js"),
-    resolve(__dirname, "src/main/file-sync.ts")
-  ];
-  
-  console.log(chalk.blue("Looking for file-sync module..."));
-  
-  const errors = [];
-  
-  for (const path of possiblePaths) {
-    try {
-      console.log(chalk.gray(`Trying ${path}...`));
-      if (path.endsWith('.ts')) {
-        const module = await import(path);
-        console.log(chalk.green(`Successfully loaded ${path}`));
-        return module.default;
-      } else {
-        // For JS files, check if they exist first
-        if (existsSync(path)) {
-          const module = await import(path);
-          console.log(chalk.green(`Successfully loaded ${path}`));
-          return module.default;
-        } else {
-          errors.push(`File does not exist: ${path}`);
-        }
-      }
-    } catch (error) {
-      errors.push(`Error loading ${path}: ${error.message}`);
-    }
-  }
-  
-  console.error(chalk.red("Error: Could not find the file-sync module."));
-  console.error(chalk.yellow("This might be due to a global installation issue."));
-  console.error(chalk.gray("Detailed errors:"));
-  errors.forEach(err => console.error(chalk.gray(`- ${err}`)));
-  
-  console.error(chalk.yellow("\nPossible solutions:"));
-  console.error(chalk.yellow("1. Install locally instead of globally"));
-  console.error(chalk.yellow("2. Try running with: bun install -g . (from the project directory)"));
-  console.error(chalk.yellow("3. Clone the repository and run: cd /path/to/repo && sudo npm link"));
-  
-  process.exit(1);
-}
-
-// Load the sync files module
-let syncFiles;
-try {
-  syncFiles = await loadSyncFilesModule();
-} catch (error) {
-  console.error(chalk.red(`Error loading file-sync module: ${error.message}`));
-  process.exit(1);
-}
 
 // Read version from package.json, with fallback
 let VERSION = "0.0.0";
@@ -123,11 +56,9 @@ function parse() {
 }
 
 // Display help information
-function showHelp() {
-  const runtime = typeof Bun !== 'undefined' ? 'bun' : 'node';
-  
+function showHelp() {  
   console.log(`
-${chalk.bold(`Usage: ${runtime} webdav-backup <source-dir> [options]`)}
+${chalk.bold(`Usage: webdav-backup <source-dir> [options]`)}
 
 ${chalk.bold("Options:")}
   --cores=<number>   Number of concurrent uploads (default: 2/3 of CPU cores)
@@ -156,20 +87,33 @@ function showVersion() {
 // Main function
 async function main() {
   try {
-    // Parse CLI arguments
-    const args = parse();
+    // Check if help or version flags are present before parsing other arguments
+    // This allows these flags to work without other required arguments
+    const rawArgs = Bun.argv.slice(2);
     
-    // Show version info if requested
-    if (args.version) {
-      showVersion();
-      process.exit(0);
-    }
-    
-    // Show help if requested
-    if (args.help) {
+    // Check for help flag first (highest priority)
+    if (rawArgs.includes("--help") || rawArgs.includes("-h")) {
       showHelp();
       process.exit(0);
+      return; // For TypeScript to understand the flow
     }
+    
+    // Check for version flag second (second priority)
+    if (rawArgs.includes("--version") || rawArgs.includes("-v")) {
+      showVersion();
+      process.exit(0);
+      return; // For TypeScript to understand the flow
+    }
+    
+    // Show help when no arguments are provided
+    if (rawArgs.length === 0) {
+      showHelp();
+      process.exit(0);
+      return;
+    }
+    
+    // Parse CLI arguments for other commands
+    const args = parse();
     
     // Check for required source directory
     if (!args.sourceDir) {

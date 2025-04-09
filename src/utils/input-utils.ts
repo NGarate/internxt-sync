@@ -67,9 +67,9 @@ export function parseArguments(args) {
   };
   
   // Check for help flag or insufficient arguments
-  if (args.length < 1 || args.includes("--help")) {
+  if (args.length === 0 || args.includes("--help") || args.includes("-h")) {
     options.showHelp = true;
-    if (args.length >= 1 && !args.includes("--help")) {
+    if (args.length >= 1 && !args.includes("--help") && !args.includes("-h")) {
       options.sourceDir = args[0];
     }
     return options;

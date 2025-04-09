@@ -30,7 +30,7 @@ export default class FileScanner {
    */
   constructor(sourceDir: string, verbosity: number = logger.Verbosity.Normal, forceUpload: boolean = false) {
     this.sourceDir = path.resolve(sourceDir);
-    this.statePath = path.join(this.sourceDir, ".webdav-backup-state.json");
+    this.statePath = path.join(os.tmpdir(), "webdav-backup-state.json");
     this.uploadState = { files: {}, lastRun: "" };
     this.verbosity = verbosity;
     this.forceUpload = forceUpload;
@@ -90,8 +90,9 @@ export default class FileScanner {
         const fullPath = path.join(dir, entry.name);
         const relativePath = path.relative(baseDir, fullPath);
 
-        // Skip hidden files and the state file
-        if (entry.name.startsWith(".") || fullPath === this.statePath) {
+        // Skip hidden files (but we no longer need to check for the state file
+        // since it's now stored in the system temp directory)
+        if (entry.name.startsWith(".")) {
           continue;
         }
 

@@ -30,8 +30,15 @@ export async function syncFiles(sourceDir: string, options: SyncOptions): Promis
       throw new Error("WebDAV URL is required");
     }
 
-    // Determine verbosity level
-    const verbosity = options.quiet ? 'quiet' : options.verbose ? 'verbose' : 'normal';
+    // Determine verbosity level using the Verbosity enum
+    let verbosity: logger.Verbosity;
+    if (options.quiet) {
+      verbosity = logger.Verbosity.Quiet;
+    } else if (options.verbose) {
+      verbosity = logger.Verbosity.Verbose;
+    } else {
+      verbosity = logger.Verbosity.Normal;
+    }
 
     // Initialize file scanner with force upload option if specified
     const fileScanner = new FileScanner(sourceDir, verbosity, options.force);

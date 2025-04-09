@@ -210,13 +210,16 @@ export default class Uploader {
     }
     
     // Check connectivity first
-    if (!await this.webdavService.checkConnectivity()) {
+    const connected = await this.webdavService.checkConnectivity();
+    if (!connected) {
+      logger.error("Failed to connect to WebDAV server. Upload cannot proceed.");
       return;
     }
     
     // Create the target directory structure if needed
     if (this.targetDir) {
-      await this.ensureDirectoryExists(this.targetDir);
+      const dirResult = await this.ensureDirectoryExists(this.targetDir);
+      logger.verbose(`Target directory result: ${dirResult ? 'success' : 'failed'}`, this.verbosity);
     }
     
     if (filesToUpload.length === 0) {
