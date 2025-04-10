@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * webdav-backup CLI
  * A simple, fast CLI for backing up files to WebDAV servers
@@ -11,7 +12,7 @@ import chalk from "chalk";
 // Import the syncFiles function
 // In a development environment, Bun transpiles this directly
 // In production, it's bundled correctly by the bun build command
-import { syncFiles } from "./src/main/file-sync";
+import { syncFiles, SyncOptions } from "./src/file-sync";
 
 // Get version from package.json using Bun's built-in functionality
 const packageJson = await Bun.file("package.json").json();
@@ -125,7 +126,7 @@ async function main() {
       verbose: args.verbose,
       force: args.force,
       webdavUrl: args["webdav-url"]
-    });
+    } as SyncOptions);
     
   } catch (error) {
     console.error(chalk.red(`Error: ${error.message}`));

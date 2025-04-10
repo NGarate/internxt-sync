@@ -22,22 +22,3 @@ export function createWebDAVClient(webdavUrl, options = {}) {
   
   return createClient(webdavUrl, clientOptions);
 }
-
-/**
- * Creates a WebDAV client for testing purposes
- * @param {Function} getContentsImpl - Implementation for getDirectoryContents
- * @param {Function} createDirImpl - Implementation for createDirectory
- * @param {Function} putFileImpl - Implementation for putFileContents
- * @returns {Object} Mock WebDAV client
- */
-export function createTestClient({
-  getContentsImpl = () => Promise.resolve([]),
-  createDirImpl = () => Promise.resolve(),
-  putFileImpl = () => Promise.resolve()
-} = {}) {
-  return {
-    getDirectoryContents: getContentsImpl,
-    createDirectory: createDirImpl,
-    putFileContents: putFileImpl
-  };
-} 

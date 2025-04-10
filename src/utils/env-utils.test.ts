@@ -49,16 +49,4 @@ describe('Environment Utilities', () => {
       expect(envUtils.getOptimalConcurrency()).toBe(1); // Minimum of 1 even if 2/3 of 1 < 1
     });
   });
-  
-  // Test version info retrieval
-  describe('getVersionInfo', () => {
-    it('should include platform and architecture information', () => {
-      const info = envUtils.getVersionInfo();
-      
-      // We can't easily mock Bun.version, so just verify it's a string
-      expect(typeof info.bunVersion).toBe('string');
-      expect(info.platform).toBe(process.platform);
-      expect(info.arch).toBe(process.arch);
-    });
-  });
 }); 

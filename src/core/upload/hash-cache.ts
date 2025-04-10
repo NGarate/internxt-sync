@@ -1,13 +1,12 @@
-import { Verbosity } from '../interfaces/logger';
 /**
  * HashCache
  * Handles the caching of file hashes to detect changes
  */
 
-import * as fs from 'fs';
-import * as path from 'path';
-import * as crypto from 'crypto';
-import * as logger from '../../utils/logger';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import { Verbosity, verbose as logVerbose, error as logError } from '../../utils/logger';
 
 /**
  * HashCache class to manage file hash caching
@@ -18,7 +17,7 @@ export class HashCache {
    * @param {string} cachePath - Path to the cache file
    * @param {number} verbosity - Verbosity level
    */
-  constructor(cachePath, verbosity = logger.Verbosity.Normal) {
+  constructor(cachePath, verbosity = Verbosity.Normal) {
     this.cachePath = cachePath;
     this.verbosity = verbosity;
     this.cache = new Map();
@@ -34,12 +33,12 @@ export class HashCache {
         const data = await fs.promises.readFile(this.cachePath, 'utf8');
         const cache = JSON.parse(data);
         this.cache = new Map(Object.entries(cache));
-        logger.verbose(`Loaded hash cache from ${this.cachePath}`, this.verbosity);
+        logVerbose(`Loaded hash cache from ${this.cachePath}`, this.verbosity);
         return true;
       }
       return false;
     } catch (error) {
-      logger.error(`Error loading hash cache: ${error.message}`, this.verbosity);
+      logError(`Error loading hash cache: ${error.message}`, this.verbosity);
       return false;
     }
   }
@@ -52,10 +51,10 @@ export class HashCache {
     try {
       const cache = Object.fromEntries(this.cache);
       await fs.promises.writeFile(this.cachePath, JSON.stringify(cache, null, 2));
-      logger.verbose(`Saved hash cache to ${this.cachePath}`, this.verbosity);
+      logVerbose(`Saved hash cache to ${this.cachePath}`, this.verbosity);
       return true;
     } catch (error) {
-      logger.error(`Error saving hash cache: ${error.message}`, this.verbosity);
+      logVerbose(`Error saving hash cache: ${error.message}`, this.verbosity);
       return false;
     }
   }
@@ -91,7 +90,7 @@ export class HashCache {
       
       // If no stored hash exists, file has changed
       if (!storedHash) {
-        logger.verbose(`No cached hash for ${normalizedPath}, marking as changed`, this.verbosity);
+        logVerbose(`No cached hash for ${normalizedPath}, marking as changed`, this.verbosity);
         this.cache.set(normalizedPath, currentHash);
         await this.save();
         return true;
@@ -102,16 +101,16 @@ export class HashCache {
       
       // Update stored hash if file has changed
       if (hasChanged) {
-        logger.verbose(`File hash changed for ${normalizedPath}`, this.verbosity);
+        logVerbose(`File hash changed for ${normalizedPath}`, this.verbosity);
         this.cache.set(normalizedPath, currentHash);
         await this.save();
       } else {
-        logger.verbose(`File ${normalizedPath} unchanged (hash match)`, this.verbosity);
+        logVerbose(`File ${normalizedPath} unchanged (hash match)`, this.verbosity);
       }
       
       return hasChanged;
     } catch (error) {
-      logger.error(`Error checking file changes: ${error.message}`, this.verbosity);
+      logError(`Error checking file changes: ${error.message}`, this.verbosity);
       return true; // Assume file has changed if we can't check
     }
   }

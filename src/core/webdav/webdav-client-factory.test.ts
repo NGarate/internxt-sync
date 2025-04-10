@@ -68,9 +68,4 @@ describe('WebDAV Client Factory', () => {
     expect(client.config.username).toBe('webdav');
     expect(client.config.password).toBe('password');
   });
-  
-  it.skip('should log verbose information when creating a client - skipped due to Bun limitations', () => {
-    // This test is skipped because of difficulties in mocking the logger functions
-    // with Bun's test runner
-  });
 }); 

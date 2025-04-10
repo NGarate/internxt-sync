@@ -2,136 +2,161 @@
  * Tests for Hash Cache
  */
 
-import { expect, describe, it, beforeEach, afterEach, mock } from 'bun:test';
+import { expect, describe, it, beforeEach, afterEach, mock, spyOn } from 'bun:test';
 import { HashCache } from './hash-cache';
 import { Verbosity } from '../../interfaces/logger';
 import * as logger from '../../utils/logger';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as crypto from 'crypto';
-import { spyOn, createMockLoggers } from '../../../test-config/mocks/test-helpers';
 
 describe('HashCache', () => {
-  // Mocks
-  let loggerMocks;
-  
   // Test data
   const cachePath = '/path/to/cache.json';
   const verbosity = Verbosity.Verbose;
   
+  // Spies
+  let loggerVerboseSpy;
+  let loggerErrorSpy;
+  let existsSyncSpy;
+  let readFileSpy;
+  let writeFileSpy;
+  
   beforeEach(() => {
-    // Create spies for logging
-    loggerMocks = createMockLoggers();
+    // Spy on logger functions
+    loggerVerboseSpy = spyOn(logger, 'verbose');
+    loggerErrorSpy = spyOn(logger, 'error');
     
-    // Mock fs existsSync
-    spyOn(fs, 'existsSync').mockImplementation(() => true);
-    
-    // Mock writeFile
-    spyOn(fs.promises, 'writeFile').mockImplementation(() => Promise.resolve());
-    
-    // Mock readFile
-    spyOn(fs.promises, 'readFile').mockImplementation(() => 
+    // Spy on fs functions
+    existsSyncSpy = spyOn(fs, 'existsSync').mockImplementation(() => true);
+    readFileSpy = spyOn(fs.promises, 'readFile').mockImplementation(() => 
       Promise.resolve(JSON.stringify({'file1.txt': 'hash1', 'file2.txt': 'hash2'}))
     );
-    
-    // Reset logger mocks
-    Object.values(loggerMocks).forEach(mock => mock.mockReset());
+    writeFileSpy = spyOn(fs.promises, 'writeFile').mockImplementation(() => 
+      Promise.resolve()
+    );
+  });
+  
+  afterEach(() => {
+    // Reset spies
+    loggerVerboseSpy.mockRestore();
+    loggerErrorSpy.mockRestore();
+    existsSyncSpy.mockRestore();
+    readFileSpy.mockRestore();
+    writeFileSpy.mockRestore();
   });
   
   describe('constructor', () => {
     it('should initialize with the provided cache path', () => {
       const cache = new HashCache(cachePath, verbosity);
-      
       expect(cache.cachePath).toBe(cachePath);
     });
     
     it('should initialize with the provided verbosity level', () => {
       const cache = new HashCache(cachePath, verbosity);
-      
       expect(cache.verbosity).toBe(verbosity);
     });
   });
   
   describe('load', () => {
-    it('should load cache from file if it exists', () => {
+    it('should load cache from file if it exists', async () => {
       const cache = new HashCache(cachePath, verbosity);
-      cache.load();
+      const result = await cache.load();
       
-      expect(fs.existsSync).toHaveBeenCalledWith(cachePath);
+      expect(existsSyncSpy).toHaveBeenCalledWith(cachePath);
+      expect(readFileSpy).toHaveBeenCalledWith(cachePath, 'utf8');
+      expect(result).toBe(true);
+      expect(cache.cache.size).toBeGreaterThan(0);
+      expect(loggerVerboseSpy).toHaveBeenCalled();
     });
     
-    it('should create empty cache if file does not exist', () => {
-      spyOn(fs, 'existsSync').mockImplementation(() => false);
+    it('should return false if file does not exist', async () => {
+      existsSyncSpy.mockImplementation(() => false);
       
       const cache = new HashCache(cachePath, verbosity);
-      cache.load();
+      const result = await cache.load();
       
-      expect(fs.existsSync).toHaveBeenCalledWith(cachePath);
+      expect(existsSyncSpy).toHaveBeenCalledWith(cachePath);
+      expect(readFileSpy).not.toHaveBeenCalled();
+      expect(result).toBe(false);
+      expect(cache.cache.size).toBe(0);
     });
     
-    it('should handle file read errors', () => {
-      spyOn(fs.promises, 'readFile').mockImplementation(() => 
-        Promise.reject(new Error('File read error'))
-      );
+    it('should handle file read errors', async () => {
+      readFileSpy.mockImplementation(() => Promise.reject(new Error('File read error')));
       
       const cache = new HashCache(cachePath, verbosity);
-      cache.load();
+      const result = await cache.load();
       
-      expect(fs.existsSync).toHaveBeenCalledWith(cachePath);
+      expect(existsSyncSpy).toHaveBeenCalledWith(cachePath);
+      expect(readFileSpy).toHaveBeenCalledWith(cachePath, 'utf8');
+      expect(result).toBe(false);
+      expect(loggerErrorSpy).toHaveBeenCalled();
     });
     
-    it('should handle JSON parse errors', () => {
-      spyOn(fs.promises, 'readFile').mockImplementation(() => 
-        Promise.resolve('invalid json')
-      );
+    it('should handle JSON parse errors', async () => {
+      readFileSpy.mockImplementation(() => Promise.resolve('invalid json'));
       
       const cache = new HashCache(cachePath, verbosity);
-      cache.load();
+      const result = await cache.load();
       
-      expect(fs.existsSync).toHaveBeenCalledWith(cachePath);
+      expect(existsSyncSpy).toHaveBeenCalledWith(cachePath);
+      expect(readFileSpy).toHaveBeenCalledWith(cachePath, 'utf8');
+      expect(result).toBe(false);
+      expect(loggerErrorSpy).toHaveBeenCalled();
     });
   });
-  
-  describe('save', () => {
-    it.skip('should save cache to file - skipped due to Bun limitations', async () => {
-      // This test is skipped because of Bun's limitations with mocking
-    });
     
-    it.skip('should handle file write errors - skipped due to Bun limitations', async () => {
-      // This test is skipped because of Bun's limitations with mocking
-    });
-  });
-  
   describe('calculateHash', () => {
     it('should calculate a hash for a file', async () => {
-      spyOn(fs, 'createReadStream').mockImplementation((path) => {
-        const mockStream = {
-          on: (event, callback) => {
-            if (event === 'data') callback(Buffer.from('test content'));
-            if (event === 'end') setTimeout(callback, 10);
-            return mockStream;
+      // Create a mock event emitter
+      const mockStream = {
+        on: function(event, callback) {
+          // Store callbacks
+          if (!this._callbacks) this._callbacks = {};
+          this._callbacks[event] = callback;
+          return this;
+        },
+        
+        // Method to trigger events
+        _emit: function(event, data) {
+          if (this._callbacks && this._callbacks[event]) {
+            this._callbacks[event](data);
           }
-        };
-        return mockStream;
-      });
+        }
+      };
       
-      spyOn(crypto, 'createHash').mockImplementation(() => {
-        return {
-          update: () => {},
-          digest: () => 'mock-hash-value'
-        };
-      });
+      // Mock createReadStream to return our mock stream
+      const createReadStreamSpy = spyOn(fs, 'createReadStream').mockImplementation(() => mockStream);
+      
+      // Mock hash object
+      const mockHash = {
+        update: mock(() => mockHash),
+        digest: mock(() => 'mock-hash-value')
+      };
+      
+      // Mock createHash to return our mock hash
+      const createHashSpy = spyOn(crypto, 'createHash').mockImplementation(() => mockHash);
       
       const cache = new HashCache(cachePath, verbosity);
-      const hash = await cache.calculateHash('/path/to/file.txt');
+      const filePath = '/path/to/file.txt';
+      const hashPromise = cache.calculateHash(filePath);
       
-      expect(typeof hash).toBe('string');
-    });
-  });
-  
-  describe('hasChanged', () => {
-    it.skip('should detect file changes - skipped due to Bun limitations', async () => {
-      // This test is skipped because of Bun's limitations with mocking
+      // Simulate stream events
+      mockStream._emit('data', Buffer.from('test content'));
+      mockStream._emit('end');
+      
+      const hash = await hashPromise;
+      
+      expect(createReadStreamSpy).toHaveBeenCalledWith(filePath);
+      expect(createHashSpy).toHaveBeenCalledWith('md5');
+      expect(mockHash.update).toHaveBeenCalled();
+      expect(mockHash.digest).toHaveBeenCalledWith('hex');
+      expect(hash).toBe('mock-hash-value');
+      
+      // Clean up spies
+      createReadStreamSpy.mockRestore();
+      createHashSpy.mockRestore();
     });
   });
   
@@ -141,17 +166,13 @@ describe('HashCache', () => {
       const hash = 'new-hash';
       const cache = new HashCache(cachePath, verbosity);
       
-      // Create a simple mock for cache.cache
-      const cacheMock = new Map();
-      cache.cache = cacheMock;
-      
-      // Spy on the set method
-      const setSpy = spyOn(cacheMock, 'set');
-      
       cache.updateHash(filePath, hash);
       
-      // Verify set was called with the normalized path and hash
-      expect(setSpy).toHaveBeenCalledWith(path.normalize(filePath), hash);
+      // Normalize path the same way the method does
+      const normalizedPath = path.normalize(filePath);
+      
+      // Verify the hash was stored correctly
+      expect(cache.cache.get(normalizedPath)).toBe(hash);
     });
   });
   
@@ -159,13 +180,10 @@ describe('HashCache', () => {
     it('should return the size of the cache', () => {
       const cache = new HashCache(cachePath, verbosity);
       
-      // Create a mock for cache.cache with a size getter
-      const mockCache = {
-        size: 3
-      };
-      
-      // Replace the cache property
-      cache.cache = mockCache;
+      // Add some entries to the cache
+      cache.cache.set('file1.txt', 'hash1');
+      cache.cache.set('file2.txt', 'hash2');
+      cache.cache.set('file3.txt', 'hash3');
       
       expect(cache.size).toBe(3);
     });

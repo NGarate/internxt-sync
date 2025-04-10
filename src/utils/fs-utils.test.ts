@@ -60,11 +60,6 @@ describe('File System Utilities', () => {
       
       expect(result).toBe('7f107e29cce7268c1a8d4ef949060e56');
     });
-    
-    // Skip this test as it's difficult to mock streams and events properly in Bun
-    it.skip('should reject the promise if stream emits an error', async () => {
-      // This test will be skipped
-    });
   });
   
   // Test JSON file operations

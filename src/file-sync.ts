@@ -5,10 +5,10 @@
  */
 
 import chalk from 'chalk';
-import { getOptimalConcurrency } from '../utils/env-utils';
-import * as logger from '../utils/logger';
-import FileScanner from '../core/file-scanner';
-import Uploader from '../core/upload/uploader';
+import { getOptimalConcurrency } from './utils/env-utils';
+import * as logger from './utils/logger';
+import FileScanner from './core/file-scanner';
+import Uploader from './core/upload/uploader';
 
 // Define options interface for better type checking
 export interface SyncOptions {
@@ -71,7 +71,3 @@ export async function syncFiles(sourceDir: string, options: SyncOptions): Promis
     throw error; // Let the CLI handle the error
   }
 }
-
-// Make sure to export both the interface and the function
-export default syncFiles;
-export { SyncOptions }; 

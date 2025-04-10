@@ -3,7 +3,7 @@
  * Handles logging operations with different verbosity levels
  */
 
-import { Verbosity, LogLevel } from '../interfaces/logger';
+import { Verbosity, LogLevel, LogFunction } from '../interfaces/logger';
 
 // Export verbosity levels from the interface
 export { Verbosity };
@@ -56,7 +56,7 @@ export function log(
   level: LogLevel, 
   currentVerbosity: number, 
   allowDuplicates: boolean = true
-): void {
+): LogFunction {
   if (currentVerbosity >= level) {
     // Skip duplicate messages if not allowed
     if (!allowDuplicates && recentMessages.has(message)) {
@@ -81,7 +81,7 @@ export function log(
  * Log an error message (always shown regardless of verbosity)
  * @param {string} message - The error message
  */
-export function error(message: string): void {
+export function error (message: string): void {
   const formattedMessage = `❌ ${message}`;
   process.stderr.write(ensureNewline(`${colors.red}${formattedMessage}${colors.reset}`));
 }
@@ -91,7 +91,7 @@ export function error(message: string): void {
  * @param {string} message - The warning message
  * @param {number} currentVerbosity - The current verbosity setting
  */
-export function warning(message: string, currentVerbosity: number): void {
+export const warning: LogFunction = (message, currentVerbosity) => {
   const formattedMessage = `⚠️ ${message}`;
   log(`${colors.yellow}${formattedMessage}${colors.reset}`, Verbosity.Normal, currentVerbosity, false);
 }
@@ -101,7 +101,7 @@ export function warning(message: string, currentVerbosity: number): void {
  * @param {string} message - The info message
  * @param {number} currentVerbosity - The current verbosity setting
  */
-export function info(message: string, currentVerbosity: number): void {
+export const info: LogFunction = (message, currentVerbosity) => {
   const formattedMessage = `ℹ️  ${message}`;
   log(`${colors.blue}${formattedMessage}${colors.reset}`, Verbosity.Normal, currentVerbosity, false);
 }
@@ -111,7 +111,7 @@ export function info(message: string, currentVerbosity: number): void {
  * @param {string} message - The success message
  * @param {number} currentVerbosity - The current verbosity setting
  */
-export function success(message: string, currentVerbosity: number): void {
+export const success: LogFunction = (message, currentVerbosity) => {
   const formattedMessage = `✅ ${message}`;
   log(`${colors.green}${formattedMessage}${colors.reset}`, Verbosity.Normal, currentVerbosity, true);
 }
@@ -121,7 +121,7 @@ export function success(message: string, currentVerbosity: number): void {
  * @param {string} message - The verbose message
  * @param {number} currentVerbosity - The current verbosity setting
  */
-export function verbose(message: string, currentVerbosity: number): void {
+export const verbose: LogFunction = (message, currentVerbosity) => {
   log(message, Verbosity.Verbose, currentVerbosity, true);
 }
 

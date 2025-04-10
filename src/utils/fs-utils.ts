@@ -10,10 +10,10 @@ import crypto from 'node:crypto';
 import { promisify } from 'node:util';
 
 // Promisified functions
-export const existsAsync = promisify(fs.exists);
-export const mkdirAsync = promisify(fs.mkdir);
-export const readFileAsync = promisify(fs.readFile);
-export const writeFileAsync = promisify(fs.writeFile);
+export const existsAsync = fs.promises.exists;
+export const mkdirAsync = fs.promises.mkdir;
+export const readFileAsync = fs.promises.readFile;
+export const writeFileAsync = fs.promises.writeFile;
 
 /**
  * URL encode path components

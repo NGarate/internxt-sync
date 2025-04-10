@@ -15,7 +15,6 @@
   "engines": {
     "bun": ">=1.0.0"
   },
-  "preferGlobal": true,
   "files": [
     "index.ts",
     "src/**/*.ts",
