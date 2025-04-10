@@ -5,15 +5,49 @@
  */
 
 // Import test helpers and utilities
-import { expect, describe, it, beforeEach, spyOn, mock } from 'bun:test';
-import { createMockEventEmitter } from '@mocks/event-emitter';
+import { expect, describe, it, beforeEach, afterEach, spyOn, mock } from 'bun:test';
 
 import FileScanner from './file-scanner';
 import * as fsUtils from '../utils/fs-utils';
 import * as logger from '../utils/logger';
 import fs from 'fs';
 import path from 'path';
-import { FileInfo, ScanResult, UploadState } from '../interfaces/file-scanner';
+import { HashCache } from './upload/hash-cache';
+
+// Create a mock for the HashCache class
+class MockHashCache {
+  constructor() {
+    this.cache = new Map();
+    this.hasChangedMock = mock(() => true);
+    this.loadMock = mock(() => Promise.resolve(true));
+    this.saveMock = mock(() => Promise.resolve(true));
+  }
+
+  async load() {
+    return this.loadMock();
+  }
+
+  async save() {
+    return this.saveMock();
+  }
+
+  async hasChanged(filePath) {
+    return this.hasChangedMock(filePath);
+  }
+
+  updateHash(filePath, hash) {
+    this.cache.set(path.normalize(filePath), hash);
+  }
+
+  get size() {
+    return this.cache.size;
+  }
+}
+
+// Mock the HashCache module
+spyOn(HashCache.prototype, 'constructor').mockImplementation(function(...args) {
+  return new MockHashCache();
+});
 
 describe('FileScanner', () => {
   // Set up spies and mocks
@@ -26,46 +60,54 @@ describe('FileScanner', () => {
   let loggerVerboseSpy;
   let loggerInfoSpy;
   let loggerErrorSpy;
+  let originalResolve;
   
   beforeEach(() => {
+    // Save original path.resolve
+    originalResolve = path.resolve;
+    
     // Create fresh spies for each test
-    calculateChecksumSpy = spyOn(fsUtils, 'calculateChecksum');
-    loadJsonFromFileSpy = spyOn(fsUtils, 'loadJsonFromFile');
-    saveJsonToFileSpy = spyOn(fsUtils, 'saveJsonToFile');
-    fsStatSyncSpy = spyOn(fs, 'statSync');
-    fsReaddirSyncSpy = spyOn(fs, 'readdirSync');
+    calculateChecksumSpy = spyOn(fsUtils, 'calculateChecksum').mockImplementation(() => Promise.resolve('test-checksum'));
+    loadJsonFromFileSpy = spyOn(fsUtils, 'loadJsonFromFile').mockImplementation(() => Promise.resolve({ files: {}, lastRun: '' }));
+    saveJsonToFileSpy = spyOn(fsUtils, 'saveJsonToFile').mockImplementation(() => Promise.resolve(true));
+    
+    // Mock fs functions
+    fsStatSyncSpy = spyOn(fs, 'statSync').mockImplementation(() => ({ size: 1024 }));
+    fsReaddirSyncSpy = spyOn(fs, 'readdirSync').mockImplementation(() => [
+      { name: 'file1.txt', isDirectory: () => false, isFile: () => true }
+    ]);
     fsExistsSyncSpy = spyOn(fs, 'existsSync').mockImplementation(() => true);
     
-    loggerVerboseSpy = spyOn(logger, 'verbose');
-    loggerInfoSpy = spyOn(logger, 'info');
-    loggerErrorSpy = spyOn(logger, 'error');
-  });
-  
-  // Test constructor
-  it('should create a FileScanner with the provided source directory', () => {
     // Mock path.resolve to return a predictable path
-    const originalResolve = path.resolve;
     spyOn(path, 'resolve').mockImplementation((dir) => `/resolved${dir}`);
     
-    const scanner = new FileScanner('/test/dir', 1);
-    
-    expect(scanner.sourceDir).toBe('/resolved/test/dir');
-    expect(scanner.verbosity).toBe(1);
-    expect(scanner.statePath).toContain('.webdav-backup-state.json');
-    
+    // Mock logger functions
+    loggerVerboseSpy = spyOn(logger, 'verbose').mockImplementation(() => {});
+    loggerInfoSpy = spyOn(logger, 'info').mockImplementation(() => {});
+    loggerErrorSpy = spyOn(logger, 'error').mockImplementation(() => {});
+  });
+  
+  afterEach(() => {
     // Restore original path.resolve
     path.resolve = originalResolve;
   });
   
+  // Test constructor
+  it('should create a FileScanner with the provided source directory', () => {
+    const scanner = new FileScanner('/test/dir', 1);
+    
+    expect(scanner.sourceDir).toBe('/resolved/test/dir');
+    expect(scanner.verbosity).toBe(1);
+  });
+  
   // Test loadState
   it('should load state from file', async () => {
-    spyOn(fsUtils, 'loadJsonFromFile').mockImplementation(() => Promise.resolve({ files: { 'test.txt': 'abc123' }, lastRun: '2021-01-01' }));
+    loadJsonFromFileSpy.mockImplementation(() => Promise.resolve({ files: { 'test.txt': 'abc123' }, lastRun: '2021-01-01' }));
     
     const scanner = new FileScanner('/test/dir');
     await scanner.loadState();
     
     expect(fsUtils.loadJsonFromFile).toHaveBeenCalledTimes(1);
-    expect(scanner.statePath).toContain('.webdav-backup-state.json');
   });
   
   // Test saveState

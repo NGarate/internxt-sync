@@ -4,8 +4,35 @@ import { Verbosity } from '../interfaces/logger';
  * Handles tracking and displaying upload progress
  */
 
-import chalk from 'chalk';
+// Import logger directly - we'll handle chalk conditionally
 import * as logger from '../../utils/logger';
+
+// Helper to format text with colors, can be mocked in tests
+export const formatText = {
+  green: (text) => text,
+  yellow: (text) => text,
+  red: (text) => text,
+  blue: (text) => text
+};
+
+// Try to import chalk only if not in test environment
+if (process.env.NODE_ENV !== 'test') {
+  try {
+    // Dynamic import for chalk
+    import('chalk').then((chalkModule) => {
+      formatText.green = chalkModule.default.green;
+      formatText.yellow = chalkModule.default.yellow;
+      formatText.red = chalkModule.default.red;
+      formatText.blue = chalkModule.default.blue;
+    }).catch(() => {
+      // Keep the default implementation if chalk isn't available
+      console.warn('Chalk module not available, using plain text');
+    });
+  } catch (error) {
+    // Keep the default implementation if chalk isn't available
+    console.warn('Chalk module not available, using plain text');
+  }
+}
 
 /**
  * ProgressTracker class for monitoring upload progress
@@ -221,9 +248,9 @@ export class ProgressTracker {
     
     // Always show the final summary, regardless of verbosity
     if (this.failedFiles === 0) {
-      logger.always(chalk.green(`Upload completed successfully! All ${this.completedFiles} files uploaded.`));
+      logger.always(formatText.green(`Upload completed successfully! All ${this.completedFiles} files uploaded.`));
     } else {
-      logger.always(chalk.yellow(`Upload completed with issues: ${this.completedFiles} succeeded, ${this.failedFiles} failed.`));
+      logger.always(formatText.yellow(`Upload completed with issues: ${this.completedFiles} succeeded, ${this.failedFiles} failed.`));
     }
   }
 
