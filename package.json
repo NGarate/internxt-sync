@@ -10,7 +10,7 @@
   "scripts": {
     "start": "bun index.ts",
     "test": "bun test",
-    "build": "bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-linux-x64 --target=bun-linux-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-arm64 --target=bun-macos-arm64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-x64 --target=bun-macos-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-windows-x64 --target=bun-windows-x64 && bun build --minify --target=node ./index.ts --outfile ./dist/bin.js --external webdav --external chalk",
+    "build": "bun build --minify --target bun --sourcemap=linked ./index.ts --outfile ./dist/bin.ts",
     "prepublishOnly": "bun test && bun run build"
   },
   "engines": {
