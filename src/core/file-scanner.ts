@@ -30,7 +30,7 @@ export default class FileScanner {
    */
   constructor(sourceDir: string, verbosity: number = logger.Verbosity.Normal, forceUpload: boolean = false) {
     this.sourceDir = path.resolve(sourceDir);
-    this.statePath = path.join(this.sourceDir, ".webdav-backup-state.json");
+    this.statePath = path.join(os.tmpdir(), "webdav-backup-state.json");
     this.uploadState = { files: {}, lastRun: "" };
     this.verbosity = verbosity;
     this.forceUpload = forceUpload;
