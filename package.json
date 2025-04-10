@@ -1,6 +1,6 @@
 {
   "name": "webdav-backup",
-  "version": "0.2.22",
+  "version": "0.2.23",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "index.ts",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "bun index.ts",
     "test": "bun test",
-    "prepublishOnly": "bun test"
+    "prepublishOnly": "bun test && tsc --project tsconfig.json"
   },
   "engines": {
     "bun": ">=1.0.0"
