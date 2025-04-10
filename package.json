@@ -1,16 +1,16 @@
 {
   "name": "webdav-backup",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "index.ts",
   "bin": {
-    "webdav-backup": "./index.ts"
+    "webdav-backup": "./dist/bin/index.js"
   },
   "scripts": {
     "start": "bun index.ts",
     "test": "bun test",
-    "build": "bun build --minify --target bun --sourcemap=linked ./index.ts --outfile ./dist/bin.ts",
+    "build": "bun build --minify --target bun --sourcemap=linked ./index.ts --outdir ./dist/bin",
     "prepublishOnly": "bun test && bun run build"
   },
   "engines": {
