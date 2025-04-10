@@ -10,7 +10,8 @@
   "scripts": {
     "start": "bun index.ts",
     "test": "bun test",
-    "prepublishOnly": "bun test && tsc --project tsconfig.json"
+    "build": "bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-linux-x64 --target=bun-linux-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-arm64 --target=bun-macos-arm64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-x64 --target=bun-macos-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-windows-x64 --target=bun-windows-x64",
+    "prepublishOnly": "bun test && bun run build"
   },
   "engines": {
     "bun": ">=1.0.0"
@@ -35,7 +36,7 @@
   "devDependencies": {
     "@types/jest": "^29.5.14",
     "bun-types": "^1.2.8",
-    "typescript": "^5.8.2"
+    "typescript": "^5.8.3"
   },
   "dependencies": {
     "chalk": "^5.4.1",
