@@ -1,6 +1,6 @@
 {
   "name": "webdav-backup",
-  "version": "0.2.23",
+  "version": "0.3.0",
   "description": "A simple, fast, and efficient tool for backing up files to a WebDAV server",
   "type": "module",
   "main": "index.ts",
@@ -10,7 +10,7 @@
   "scripts": {
     "start": "bun index.ts",
     "test": "bun test",
-    "build": "bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-linux-x64 --target=bun-linux-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-arm64 --target=bun-macos-arm64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-x64 --target=bun-macos-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-windows-x64 --target=bun-windows-x64",
+    "build": "bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-linux-x64 --target=bun-linux-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-arm64 --target=bun-macos-arm64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-macos-x64 --target=bun-macos-x64 && bun build --compile --minify --sourcemap ./index.ts --outfile ./dist/webdav-backup-windows-x64 --target=bun-windows-x64 && bun build --minify --target=node ./index.ts --outfile ./dist/bin.js --external webdav --external chalk",
     "prepublishOnly": "bun test && bun run build"
   },
   "engines": {
